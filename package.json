@@ -10,7 +10,7 @@
     "build:iife": "tsup --format iife",
     "dev": "tsup --watch",
     "test": "vitest run",
-    "lint": "eslint .",
+    "lint": "eslint . --ext .ts",
     "release": "npm version patch && git push --follow-tags",
     "prepare": "npm run build"
   },
@@ -24,7 +24,9 @@
     "tsup": "^7.2.0",
     "typescript": "^5.4.5",
     "vitest": "^1.5.0",
-    "@types/ws": "^8.5.10"
+    "@types/ws": "^8.5.10",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0"
   },
   "license": "MIT"
 }
