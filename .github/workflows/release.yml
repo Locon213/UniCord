@@ -21,6 +21,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,34 +46,76 @@ jobs:
       - run: npm test
       - run: npm run lint
       
-      - name: Update version
+      - name: Determine version and check status
+        id: version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          
+          if [ -n "${{ github.event.inputs.custom_version }}" ]; then
+            TARGET_VERSION="${{ github.event.inputs.custom_version }}"
+            echo "Using custom version: $TARGET_VERSION"
+          else
+            # Calculate next version based on release type
+            case "${{ github.event.inputs.release_type }}" in
+              "major")
+                TARGET_VERSION=$(npm version major --dry-run --no-git-tag-version | sed 's/v//')
+                ;;
+              "minor")
+                TARGET_VERSION=$(npm version minor --dry-run --no-git-tag-version | sed 's/v//')
+                ;;
+              "patch")
+                TARGET_VERSION=$(npm version patch --dry-run --no-git-tag-version | sed 's/v//')
+                ;;
+              "prerelease")
+                TARGET_VERSION=$(npm version prerelease --dry-run --no-git-tag-version | sed 's/v//')
+                ;;
+            esac
+            echo "Using calculated version: $TARGET_VERSION"
+          fi
+          
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "TARGET_VERSION=$TARGET_VERSION" >> $GITHUB_ENV
+          echo "target_version=$TARGET_VERSION" >> $GITHUB_OUTPUT
+          
+          # Check if version needs updating
+          if [ "$CURRENT_VERSION" = "$TARGET_VERSION" ]; then
+            echo "VERSION_NEEDS_UPDATE=false" >> $GITHUB_ENV
+            echo "Version $TARGET_VERSION is already set in package.json"
+          else
+            echo "VERSION_NEEDS_UPDATE=true" >> $GITHUB_ENV
+            echo "Version will be updated from $CURRENT_VERSION to $TARGET_VERSION"
+          fi
+          
+          # Check if tag exists
+          if git rev-parse "v$TARGET_VERSION" >/dev/null 2>&1; then
+            echo "TAG_EXISTS=true" >> $GITHUB_ENV
+            echo "Tag v$TARGET_VERSION already exists"
+          else
+            echo "TAG_EXISTS=false" >> $GITHUB_ENV
+            echo "Tag v$TARGET_VERSION will be created"
+          fi
+      
+      - name: Update version in package.json
+        if: env.VERSION_NEEDS_UPDATE == 'true'
         run: |
           if [ -n "${{ github.event.inputs.custom_version }}" ]; then
-            # Custom version specified
-            CURRENT_VERSION=$(node -p "require('./package.json').version")
-            TARGET_VERSION="${{ github.event.inputs.custom_version }}"
-            
-            if [ "$CURRENT_VERSION" = "$TARGET_VERSION" ]; then
-              echo "Version $TARGET_VERSION is already set, skipping version update"
-            else
-              npm version $TARGET_VERSION --no-git-tag-version
-              git add package.json package-lock.json
-              git commit -m "Release version $TARGET_VERSION"
-            fi
-            
-            # Create tag and push
-            git tag -a "v$TARGET_VERSION" -m "Release $TARGET_VERSION" || true
-            git push origin main --tags
-            echo "RELEASE_VERSION=$TARGET_VERSION" >> $GITHUB_ENV
+            npm version ${{ env.TARGET_VERSION }} --no-git-tag-version
           else
-            # Use release type
-            NEW_VERSION=$(npm version ${{ github.event.inputs.release_type }} --no-git-tag-version)
-            git add package.json package-lock.json
-            git commit -m "Release version $NEW_VERSION"
-            git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION"
-            git push origin main --tags
-            echo "RELEASE_VERSION=${NEW_VERSION#v}" >> $GITHUB_ENV
+            npm version ${{ github.event.inputs.release_type }} --no-git-tag-version
           fi
+          git add package.json package-lock.json
+          git commit -m "Release version ${{ env.TARGET_VERSION }}"
+      
+      - name: Create and push tag
+        if: env.TAG_EXISTS == 'false'
+        run: |
+          git tag -a "v${{ env.TARGET_VERSION }}" -m "Release ${{ env.TARGET_VERSION }}"
+          git push origin "v${{ env.TARGET_VERSION }}"
+      
+      - name: Push version changes
+        if: env.VERSION_NEEDS_UPDATE == 'true'
+        run: |
+          git push origin main
       
       - run: npm publish --access public
         env:
@@ -79,8 +124,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ env.RELEASE_VERSION }}
-          name: Release ${{ env.RELEASE_VERSION }}
+          tag_name: v${{ env.TARGET_VERSION }}
+          name: Release ${{ env.TARGET_VERSION }}
           generate_release_notes: true
           draft: false
           prerelease: ${{ github.event.inputs.release_type == 'prerelease' }}
