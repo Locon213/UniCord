@@ -38,8 +38,10 @@ export class RateLimitManager {
     if (bucket.running) return;
     bucket.running = true;
     while (bucket.queue.length) {
-      const task = bucket.queue.shift()!;
-      await task();
+      const task = bucket.queue.shift();
+      if (task) {
+        await task();
+      }
     }
     bucket.running = false;
   }

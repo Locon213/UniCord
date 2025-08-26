@@ -1,10 +1,31 @@
 {
-  "name": "unicord",
-  "version": "0.2.0",
-  "description": "Universal Discord SDK & Framework",
+  "name": "@locon213/unicord",
+  "version": "0.1.1",
+  "description": "Universal Discord SDK & Framework - Enhanced TypeScript library for Discord bots and OAuth2 integration",
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "author": "Locon213 <andrei070220111@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Locon213/UniCord.git"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "api",
+    "sdk",
+    "framework",
+    "typescript",
+    "oauth2",
+    "slash-commands",
+    "components",
+    "discord.js-alternative"
+  ],
+  "homepage": "https://github.com/Locon213/UniCord#readme",
+  "bugs": {
+    "url": "https://github.com/Locon213/UniCord/issues"
+  },
   "scripts": {
     "build": "tsup",
     "build:iife": "tsup --format iife",
@@ -15,18 +36,19 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "ws": "^8.17.0"
+    "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/node": "^20.5.0",
-    "eslint": "^8.57.0",
-    "prettier": "^3.2.5",
-    "tsup": "^7.2.0",
-    "typescript": "^5.4.5",
-    "vitest": "^1.5.0",
-    "@types/ws": "^8.5.10",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0"
+    "@eslint/js": "^9.34.0",
+    "@types/node": "^22.10.6",
+    "@types/ws": "^8.5.13",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
   },
   "license": "MIT"
 }

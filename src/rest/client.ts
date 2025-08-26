@@ -19,21 +19,26 @@ export class RestClient {
     this.token = token;
   }
 
-  private async request(method: string, path: string, body?: any, tries = 0): Promise<any> {
+  private async request(method: string, path: string, body?: any, tries = 0, isFormData = false): Promise<any> {
     const route = `${method}:${path}`;
     return this.rate.queue(route, async () => {
-      const headers: any = { 'Content-Type': 'application/json' };
+      const headers: any = {};
+      if (!isFormData) {
+        headers['Content-Type'] = 'application/json';
+      }
       if (this.token) headers.Authorization = `Bot ${this.token}`;
+      
       const res = await fetch(`${this.baseUrl}${path}`, {
         method,
         headers,
-        body: body ? JSON.stringify(body) : undefined,
+        body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
       });
+      
       if (res.status === 429 || res.status >= 500) {
         if (tries < 3) {
           const retry = Number(res.headers.get('retry-after')) * 1000 || 2 ** tries * 1000;
           await new Promise((r) => setTimeout(r, retry));
-          return this.request(method, path, body, tries + 1);
+          return this.request(method, path, body, tries + 1, isFormData);
         }
       }
       if (!res.ok) {
@@ -44,12 +49,20 @@ export class RestClient {
     });
   }
 
+  private async requestFormData(method: string, path: string, formData: FormData, tries = 0): Promise<any> {
+    return this.request(method, path, formData, tries, true);
+  }
+
   get(path: string) {
     return this.request('GET', path);
   }
 
   post(path: string, body: any) {
     return this.request('POST', path, body);
+  }
+
+  postFormData(path: string, formData: FormData) {
+    return this.requestFormData('POST', path, formData);
   }
 
   put(path: string, body: any) {
@@ -60,8 +73,8 @@ export class RestClient {
     return this.request('PATCH', path, body);
   }
 
-  delete(path: string) {
-    return this.request('DELETE', path);
+  delete(path: string, body?: any) {
+    return this.request('DELETE', path, body);
   }
 
   getMe() {
