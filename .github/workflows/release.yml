@@ -3,10 +3,6 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release (e.g., 0.1.1)'
-        required: true
-        type: string
       release_type:
         description: 'Type of release'
         required: true
@@ -17,6 +13,10 @@ on:
           - minor
           - major
           - prerelease
+      custom_version:
+        description: 'Custom version (optional, overrides release_type)'
+        required: false
+        type: string
 
 jobs:
   publish:
@@ -45,11 +45,32 @@ jobs:
       
       - name: Update version
         run: |
-          npm version ${{ github.event.inputs.version }} --no-git-tag-version
-          git add package.json package-lock.json
-          git commit -m "Release version ${{ github.event.inputs.version }}"
-          git tag -a "v${{ github.event.inputs.version }}" -m "Release ${{ github.event.inputs.version }}"
-          git push origin main --tags
+          if [ -n "${{ github.event.inputs.custom_version }}" ]; then
+            # Custom version specified
+            CURRENT_VERSION=$(node -p "require('./package.json').version")
+            TARGET_VERSION="${{ github.event.inputs.custom_version }}"
+            
+            if [ "$CURRENT_VERSION" = "$TARGET_VERSION" ]; then
+              echo "Version $TARGET_VERSION is already set, skipping version update"
+            else
+              npm version $TARGET_VERSION --no-git-tag-version
+              git add package.json package-lock.json
+              git commit -m "Release version $TARGET_VERSION"
+            fi
+            
+            # Create tag and push
+            git tag -a "v$TARGET_VERSION" -m "Release $TARGET_VERSION" || true
+            git push origin main --tags
+            echo "RELEASE_VERSION=$TARGET_VERSION" >> $GITHUB_ENV
+          else
+            # Use release type
+            NEW_VERSION=$(npm version ${{ github.event.inputs.release_type }} --no-git-tag-version)
+            git add package.json package-lock.json
+            git commit -m "Release version $NEW_VERSION"
+            git tag -a "$NEW_VERSION" -m "Release $NEW_VERSION"
+            git push origin main --tags
+            echo "RELEASE_VERSION=${NEW_VERSION#v}" >> $GITHUB_ENV
+          fi
       
       - run: npm publish --access public
         env:
@@ -58,8 +79,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          name: Release ${{ github.event.inputs.version }}
+          tag_name: v${{ env.RELEASE_VERSION }}
+          name: Release ${{ env.RELEASE_VERSION }}
           generate_release_notes: true
           draft: false
           prerelease: ${{ github.event.inputs.release_type == 'prerelease' }}
