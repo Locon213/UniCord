@@ -1,0 +1,14 @@
+{
+  "name": "unicord-node-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --loader ts-node/esm index.ts"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ts-node": "^10.9.1"
+  }
+}

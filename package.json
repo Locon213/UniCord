@@ -1,0 +1,24 @@
+{
+  "name": "unicord",
+  "version": "0.1.0",
+  "description": "Universal Discord SDK & Framework",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "build:iife": "tsup --format iife",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "tsup": "^7.2.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  },
+  "license": "MIT"
+}
