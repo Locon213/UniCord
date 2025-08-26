@@ -1,64 +1,48 @@
 # UniCord
 
-Universal Discord SDK & Framework. Поддерживает OAuth2 PKCE, REST-клиент, отправку вебхуков и примеры для Node и PHP.
+Universal Discord SDK & Framework. v0.2 adds full bot runtime with Gateway, slash/text commands, sharding and auto-publish.
 
-## Быстрый старт
-
+## Quick Start
 ```bash
 npm install
 npm run build
 npm test
 ```
 
-### Пример входа на фронтенде
-```html
-<script src="https://cdn.jsdelivr.net/npm/unicord@0.1.0/dist/index.iife.js"></script>
-<script>
-const oauth = new UniCord.OAuth2({
-  clientId: '<YOUR_CLIENT_ID>',
-  redirectUri: 'https://example.com/callback',
-  backendTokenURL: 'https://your-backend/api/auth/discord',
-  defaultScopes: ['identify']
-});
-function login() { oauth.login(); }
-</script>
+### Creating a Bot
+```ts
+import { UniCordBot } from 'unicord';
+const bot = new UniCordBot({ token: '<TOKEN>', intents: 513, prefix: '!' });
+bot.command('ping', ctx => ctx.reply('Pong!'));
+bot.start();
 ```
 
-### Обработка колбэка
-```html
-<script>
-const oauth = new UniCord.OAuth2({
-  clientId: '<YOUR_CLIENT_ID>',
-  redirectUri: 'https://example.com/callback',
-  backendTokenURL: 'https://your-backend/api/auth/discord'
-});
-oauth.handleCallback().then(r=>console.log(r.user));
-</script>
+### Sync Slash Commands
+```ts
+bot.slash('ping', { description: 'Ping' }, ctx => ctx.reply('Pong!'));
+await bot.syncCommands({ scope: 'guild', guildId: '<GUILD_ID>' });
 ```
 
-## Node.js пример
+See `examples/` for more.
+
+## Secrets
+Set GitHub repository secrets:
+- `NPM_TOKEN` – npm publish token.
+- `DISCORD_TOKEN` – bot token for tests/examples.
+GitHub provides `GITHUB_TOKEN` automatically.
+
+## Release
+Local release:
 ```bash
-cd examples/node-server
-cp .env.example .env
-npm install
-npm run dev
+npm run release # bumps patch version and pushes tags
 ```
-Откройте `examples/html/login.html` через любой статический сервер (`npx serve examples/html`).
+Publishing via GitHub Actions happens on tag `v*` pushes.
 
-## PHP пример
-Разместите содержимое `examples/php-server` на сервере PHP. Файл `api/auth_discord.php` обрабатывает обмен кода на токен.
-
-## Публикация IIFE на CDN
-После `npm publish` файл доступен:
-```
-https://cdn.jsdelivr.net/npm/unicord@0.1.0/dist/index.iife.js
+## Docker
+```bash
+docker build -t unicord .
+docker compose up -d
 ```
 
-## Безопасность
-- Никогда не храните `client_secret` на фронтенде.
-- Используйте PKCE, `state` и HTTPS.
-- Сохраняйте токены только на сервере, в браузере храните лишь сессионный идентификатор (HttpOnly cookie).
-- Очищайте `sessionStorage` после колбэка.
-
-## Лицензия
+## License
 MIT

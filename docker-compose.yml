@@ -1,0 +1,9 @@
+version: '3'
+services:
+  bot:
+    build: .
+    env_file: .env
+    command: node dist/index.cjs
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
