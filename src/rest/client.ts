@@ -9,6 +9,7 @@ export class RestClient {
   private token?: string;
   private baseUrl: string;
   private rate = new RateLimitManager();
+  private applicationId?: string;
 
   constructor(opts: RestClientOptions = {}) {
     this.token = opts.token;
@@ -17,6 +18,10 @@ export class RestClient {
 
   setToken(token: string) {
     this.token = token;
+  }
+
+  setApplicationId(applicationId: string) {
+    this.applicationId = applicationId;
   }
 
   private async request(method: string, path: string, body?: any, tries = 0, isFormData = false): Promise<any> {
@@ -86,14 +91,20 @@ export class RestClient {
   }
 
   createApplicationCommand(scope: 'global' | string, payload: any) {
+    if (!this.applicationId) {
+      throw new Error('Application ID not set. Wait for the bot to be ready before creating commands.');
+    }
     if (scope === 'global')
-      return this.post('/applications/@me/commands', payload);
-    return this.post(`/applications/@me/guilds/${scope}/commands`, payload);
+      return this.post(`/applications/${this.applicationId}/commands`, payload);
+    return this.post(`/applications/${this.applicationId}/guilds/${scope}/commands`, payload);
   }
 
   bulkOverwriteCommands(scope: 'global' | string, payload: any[]) {
+    if (!this.applicationId) {
+      throw new Error('Application ID not set. Wait for the bot to be ready before syncing commands.');
+    }
     if (scope === 'global')
-      return this.put('/applications/@me/commands', payload);
-    return this.put(`/applications/@me/guilds/${scope}/commands`, payload);
+      return this.put(`/applications/${this.applicationId}/commands`, payload);
+    return this.put(`/applications/${this.applicationId}/guilds/${scope}/commands`, payload);
   }
 }

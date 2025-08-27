@@ -110,6 +110,7 @@ export class UniCordBot extends EventEmitter {
   private messageHandlers: CommandHandler[] = [];
   private middlewares: Array<(ctx: MessageContext | InteractionContext | ComponentContext, next: () => Promise<void>) => Promise<void>> = [];
   public user?: DiscordUser;
+  public applicationId?: string;
 
   constructor(private opts: BotOptions) {
     super();
@@ -232,8 +233,19 @@ export class UniCordBot extends EventEmitter {
       this.bindGateway(this.gateway);
       this.gateway.connect();
     }
+    
+    // Wait for the bot to be ready before syncing commands
     if (this.opts.autoSyncCommands) {
-      await this.syncCommands({ scope: 'global' });
+      await new Promise<void>((resolve) => {
+        this.once('ready', async () => {
+          try {
+            await this.syncCommands({ scope: 'global' });
+          } catch (error) {
+            logger.error('Failed to sync commands:', error);
+          }
+          resolve();
+        });
+      });
     }
   }
 
@@ -242,6 +254,10 @@ export class UniCordBot extends EventEmitter {
     g.on('INTERACTION_CREATE', (interaction) => this.handleInteraction(interaction));
     g.on('READY', (d) => {
       this.user = d.user;
+      this.applicationId = d.application?.id;
+      if (this.applicationId) {
+        this.rest.setApplicationId(this.applicationId);
+      }
       this.emit('ready', d);
     });
     g.on('MESSAGE_UPDATE', (msg) => this.emit('messageUpdate', msg));

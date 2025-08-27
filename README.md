@@ -128,11 +128,6 @@ npm publish --access public
 npm publish
 ```
 
-### GitHub Secrets
-Set GitHub repository secrets for automated publishing:
-- `NPM_TOKEN` – npm publish token with automation permissions
-- `DISCORD_TOKEN` – bot token for tests/examples
-
 ### Release Process
 ```bash
 # Local release (bumps version and creates tag)
