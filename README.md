@@ -114,32 +114,6 @@ npm test
 - `npm run test` - Run tests
 - `npm run lint` - Check code quality
 
-## 📦 Publishing
-
-### NPM Publishing
-```bash
-# Login to npm with your account
-npm login
-
-# Publish scoped package (first time)
-npm publish --access public
-
-# Subsequent publishes
-npm publish
-```
-
-### Release Process
-```bash
-# Local release (bumps version and creates tag)
-npm run release
-
-# Or manually
-npm version patch # or minor/major
-git push --follow-tags
-```
-
-GitHub Actions will automatically publish to npm when you push tags starting with `v*`.
-
 ## 🐳 Docker
 
 ```bash
