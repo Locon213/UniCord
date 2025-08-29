@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 - Fix Bugs
+- **Fix error 400 when launching bots**
+- **Minor other bug fixes**
+
 ## 0.1.1 - Enhanced Discord Framework
 - **Enhanced Bot API**: Complete Discord.js-like functionality with file uploads, interactive components (buttons, select menus), mention handling, and rich embed builder
 - **Advanced OAuth2 System**: Comprehensive user data extraction, multiple login scopes, token management, and permission utilities
