@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   bot:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
       target: production
@@ -21,7 +21,7 @@ services:
     networks:
       - unicord-network
     healthcheck:
-      test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+      test: ['CMD', 'node', '-e', "console.log('Health check passed')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -36,11 +36,11 @@ services:
       - redis-data:/data
       - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
     ports:
-      - "6379:6379"
+      - '6379:6379'
     networks:
       - unicord-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -57,11 +57,11 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - '5432:5432'
     networks:
       - unicord-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-unicord}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-unicord}']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -71,8 +71,8 @@ services:
     container_name: unicord-nginx
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
@@ -87,7 +87,7 @@ services:
     container_name: unicord-prometheus
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - '9090:9090'
     volumes:
       - ./docker/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus

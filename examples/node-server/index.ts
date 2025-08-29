@@ -34,4 +34,6 @@ app.post('/api/auth/discord', async (req, res) => {
 });
 
 const port = Number(process.env.PORT) || 3000;
-app.listen(port, () => console.log(`Server listening on http://localhost:${port}`));
+app.listen(port, () =>
+  console.log(`Server listening on http://localhost:${port}`),
+);

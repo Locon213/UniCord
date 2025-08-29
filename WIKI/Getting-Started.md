@@ -29,7 +29,7 @@ const bot = new UniCordBot({
   intents: 513, // GUILDS + GUILD_MESSAGES
   prefix: '!',
   mentionPrefix: true,
-  handleAllMessages: true
+  handleAllMessages: true,
 });
 
 // Simple ping command
@@ -59,13 +59,13 @@ npx tsx bot.ts
 
 ```typescript
 interface BotOptions {
-  token: string;                    // Discord bot token
-  intents: number;                  // Gateway intents
-  prefix?: string;                  // Command prefix (e.g., '!')
-  shardCount?: number;              // Number of shards for scaling
-  autoSyncCommands?: boolean;       // Auto-sync slash commands
-  mentionPrefix?: boolean;          // Allow @bot command
-  handleAllMessages?: boolean;      // Process all messages
+  token: string; // Discord bot token
+  intents: number; // Gateway intents
+  prefix?: string; // Command prefix (e.g., '!')
+  shardCount?: number; // Number of shards for scaling
+  autoSyncCommands?: boolean; // Auto-sync slash commands
+  mentionPrefix?: boolean; // Allow @bot command
+  handleAllMessages?: boolean; // Process all messages
 }
 ```
 
@@ -74,29 +74,30 @@ interface BotOptions {
 ```typescript
 // Common intent combinations
 const INTENTS = {
-  GUILDS: 1 << 0,                    // 1
-  GUILD_MEMBERS: 1 << 1,             // 2
-  GUILD_BANS: 1 << 2,                // 4
+  GUILDS: 1 << 0, // 1
+  GUILD_MEMBERS: 1 << 1, // 2
+  GUILD_BANS: 1 << 2, // 4
   GUILD_EMOJIS_AND_STICKERS: 1 << 3, // 8
-  GUILD_INTEGRATIONS: 1 << 4,        // 16
-  GUILD_WEBHOOKS: 1 << 5,            // 32
-  GUILD_INVITES: 1 << 6,             // 64
-  GUILD_VOICE_STATES: 1 << 7,        // 128
-  GUILD_PRESENCES: 1 << 8,           // 256
-  GUILD_MESSAGES: 1 << 9,            // 512
-  GUILD_MESSAGE_REACTIONS: 1 << 10,  // 1024
-  GUILD_MESSAGE_TYPING: 1 << 11,     // 2048
-  DIRECT_MESSAGES: 1 << 12,          // 4096
+  GUILD_INTEGRATIONS: 1 << 4, // 16
+  GUILD_WEBHOOKS: 1 << 5, // 32
+  GUILD_INVITES: 1 << 6, // 64
+  GUILD_VOICE_STATES: 1 << 7, // 128
+  GUILD_PRESENCES: 1 << 8, // 256
+  GUILD_MESSAGES: 1 << 9, // 512
+  GUILD_MESSAGE_REACTIONS: 1 << 10, // 1024
+  GUILD_MESSAGE_TYPING: 1 << 11, // 2048
+  DIRECT_MESSAGES: 1 << 12, // 4096
   DIRECT_MESSAGE_REACTIONS: 1 << 13, // 8192
-  DIRECT_MESSAGE_TYPING: 1 << 14,    // 16384
-  MESSAGE_CONTENT: 1 << 15,          // 32768
-  GUILD_SCHEDULED_EVENTS: 1 << 16,   // 65536
+  DIRECT_MESSAGE_TYPING: 1 << 14, // 16384
+  MESSAGE_CONTENT: 1 << 15, // 32768
+  GUILD_SCHEDULED_EVENTS: 1 << 16, // 65536
   AUTO_MODERATION_CONFIGURATION: 1 << 20, // 1048576
-  AUTO_MODERATION_EXECUTION: 1 << 21      // 2097152
+  AUTO_MODERATION_EXECUTION: 1 << 21, // 2097152
 };
 
 // Example: Bot that can read messages and manage guilds
-const botIntents = INTENTS.GUILDS | INTENTS.GUILD_MESSAGES | INTENTS.MESSAGE_CONTENT;
+const botIntents =
+  INTENTS.GUILDS | INTENTS.GUILD_MESSAGES | INTENTS.MESSAGE_CONTENT;
 ```
 
 ## 📝 Command System
@@ -110,32 +111,36 @@ bot.command('hello', async (ctx) => {
 });
 
 // Command with options
-bot.command('kick', async (ctx) => {
-  const user = ctx.mentions[0];
-  if (!user) {
-    await ctx.reply('Please mention a user to kick!');
-    return;
-  }
-  
-  // Kick logic here
-  await ctx.reply(`Kicked ${user.username}!`);
-}, {
-  aliases: ['boot', 'remove'],
-  description: 'Kick a user from the server',
-  category: 'Moderation',
-  permissions: ['KICK_MEMBERS']
-});
+bot.command(
+  'kick',
+  async (ctx) => {
+    const user = ctx.mentions[0];
+    if (!user) {
+      await ctx.reply('Please mention a user to kick!');
+      return;
+    }
+
+    // Kick logic here
+    await ctx.reply(`Kicked ${user.username}!`);
+  },
+  {
+    aliases: ['boot', 'remove'],
+    description: 'Kick a user from the server',
+    category: 'Moderation',
+    permissions: ['KICK_MEMBERS'],
+  },
+);
 
 // Command with arguments
 bot.command('ban', async (ctx) => {
   const user = ctx.mentions[0];
   const reason = ctx.args.join(' ') || 'No reason provided';
-  
+
   if (!user) {
     await ctx.reply('Please mention a user to ban!');
     return;
   }
-  
+
   await ctx.reply(`Banned ${user.username} for: ${reason}`);
 });
 ```
@@ -144,34 +149,43 @@ bot.command('ban', async (ctx) => {
 
 ```typescript
 // Basic slash command
-bot.slash('ping', {
-  description: 'Check bot latency',
-  type: 1
-}, async (ctx) => {
-  await ctx.reply('🏓 Pong!');
-});
+bot.slash(
+  'ping',
+  {
+    description: 'Check bot latency',
+    type: 1,
+  },
+  async (ctx) => {
+    await ctx.reply('🏓 Pong!');
+  },
+);
 
 // Slash command with options
-bot.slash('userinfo', {
-  description: 'Get information about a user',
-  type: 1,
-  options: [
-    {
-      name: 'user',
-      description: 'The user to get info about',
-      type: 6, // USER type
-      required: false
-    }
-  ]
-}, async (ctx) => {
-  const targetUser = ctx.options.get('user') || ctx.user;
-  const embed = bot.createEmbed()
-    .setTitle(`${targetUser.username}'s Info`)
-    .setDescription(`User ID: ${targetUser.id}`)
-    .setColor(0x00ff00);
-    
-  await ctx.reply({ embeds: [embed.toJSON()] });
-});
+bot.slash(
+  'userinfo',
+  {
+    description: 'Get information about a user',
+    type: 1,
+    options: [
+      {
+        name: 'user',
+        description: 'The user to get info about',
+        type: 6, // USER type
+        required: false,
+      },
+    ],
+  },
+  async (ctx) => {
+    const targetUser = ctx.options.get('user') || ctx.user;
+    const embed = bot
+      .createEmbed()
+      .setTitle(`${targetUser.username}'s Info`)
+      .setDescription(`User ID: ${targetUser.id}`)
+      .setColor(0x00ff00);
+
+    await ctx.reply({ embeds: [embed.toJSON()] });
+  },
+);
 ```
 
 ## 🎛️ Interactive Components
@@ -179,19 +193,23 @@ bot.slash('userinfo', {
 ### Buttons
 
 ```typescript
-bot.slash('menu', {
-  description: 'Show interactive menu',
-  type: 1
-}, async (ctx) => {
-  const button1 = bot.createButton('Click Me!', 'btn_1', ButtonStyle.Primary);
-  const button2 = bot.createButton('Danger!', 'btn_2', ButtonStyle.Danger);
-  const row = bot.createActionRow(button1, button2);
-  
-  await ctx.reply({
-    content: 'Choose an option:',
-    components: [row]
-  });
-});
+bot.slash(
+  'menu',
+  {
+    description: 'Show interactive menu',
+    type: 1,
+  },
+  async (ctx) => {
+    const button1 = bot.createButton('Click Me!', 'btn_1', ButtonStyle.Primary);
+    const button2 = bot.createButton('Danger!', 'btn_2', ButtonStyle.Danger);
+    const row = bot.createActionRow(button1, button2);
+
+    await ctx.reply({
+      content: 'Choose an option:',
+      components: [row],
+    });
+  },
+);
 
 // Handle button clicks
 bot.button('btn_1', async (ctx) => {
@@ -206,23 +224,27 @@ bot.button('btn_2', async (ctx) => {
 ### Select Menus
 
 ```typescript
-bot.slash('select', {
-  description: 'Show select menu',
-  type: 1
-}, async (ctx) => {
-  const select = bot.createStringSelect('choice', [
-    { label: 'Option 1', value: 'opt1', description: 'First option' },
-    { label: 'Option 2', value: 'opt2', description: 'Second option' },
-    { label: 'Option 3', value: 'opt3', description: 'Third option' }
-  ]);
-  
-  const row = bot.createActionRow(select);
-  
-  await ctx.reply({
-    content: 'Select an option:',
-    components: [row]
-  });
-});
+bot.slash(
+  'select',
+  {
+    description: 'Show select menu',
+    type: 1,
+  },
+  async (ctx) => {
+    const select = bot.createStringSelect('choice', [
+      { label: 'Option 1', value: 'opt1', description: 'First option' },
+      { label: 'Option 2', value: 'opt2', description: 'Second option' },
+      { label: 'Option 3', value: 'opt3', description: 'Third option' },
+    ]);
+
+    const row = bot.createActionRow(select);
+
+    await ctx.reply({
+      content: 'Select an option:',
+      components: [row],
+    });
+  },
+);
 
 // Handle select menu
 bot.selectMenu('choice', async (ctx) => {
@@ -241,13 +263,13 @@ import { OAuth2 } from '@locon213/unicord';
 const oauth = new OAuth2({
   clientId: 'your-client-id',
   redirectUri: 'http://localhost:3000/callback',
-  backendTokenURL: '/api/auth/discord'
+  backendTokenURL: '/api/auth/discord',
 });
 
 // Different login scopes
-await oauth.loginBasic();        // Basic user info
-await oauth.loginFullProfile();  // User, email, guilds, connections
-await oauth.loginGuilds();      // User guilds only
+await oauth.loginBasic(); // Basic user info
+await oauth.loginFullProfile(); // User, email, guilds, connections
+await oauth.loginGuilds(); // User guilds only
 ```
 
 ### Server-side Token Exchange
@@ -259,7 +281,7 @@ const result = await exchangeCodeForTokenNode({
   clientId: process.env.DISCORD_CLIENT_ID!,
   clientSecret: process.env.DISCORD_CLIENT_SECRET!,
   code: authCode,
-  redirectUri: redirectUri
+  redirectUri: redirectUri,
 });
 
 console.log('User:', result.user);

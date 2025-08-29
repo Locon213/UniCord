@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { 
-  UniCordBot, 
+import {
+  UniCordBot,
   OAuth2,
   exchangeCodeForTokenNode,
   getUserAvatarURL,
   Permissions,
-  hasPermission
+  hasPermission,
 } from '../src/index';
 
 describe('UniCord Integration Tests', () => {
@@ -19,7 +19,7 @@ describe('UniCord Integration Tests', () => {
         intents: 513,
         prefix: '!',
         mentionPrefix: true,
-        handleAllMessages: true
+        handleAllMessages: true,
       });
 
       mockRest = {
@@ -27,21 +27,22 @@ describe('UniCord Integration Tests', () => {
         put: vi.fn().mockResolvedValue({ id: '123' }),
         patch: vi.fn().mockResolvedValue({ id: '123' }),
         delete: vi.fn().mockResolvedValue(null),
-        postFormData: vi.fn().mockResolvedValue({ id: '123' })
+        postFormData: vi.fn().mockResolvedValue({ id: '123' }),
       };
 
       (bot as any).rest = mockRest;
       (bot as any).user = {
         id: '987654321',
         username: 'TestBot',
-        discriminator: '0001'
+        discriminator: '0001',
       };
     });
 
     it('should handle a complete interactive bot conversation', async () => {
       // Register commands and handlers
       const pingHandler = vi.fn(async (ctx) => {
-        const embed = bot.createEmbed()
+        const embed = bot
+          .createEmbed()
           .setTitle('Pong! 🏓')
           .setDescription('Bot is working correctly')
           .setColor(0x00ff00)
@@ -53,14 +54,14 @@ describe('UniCord Integration Tests', () => {
 
         await ctx.reply({
           embeds: [embed.toJSON()],
-          components: [actionRow]
+          components: [actionRow],
         });
       });
 
       const buttonHandler = vi.fn(async (ctx) => {
         await ctx.update({
           content: 'Button was clicked! ✅',
-          components: []
+          components: [],
         });
       });
 
@@ -80,33 +81,44 @@ describe('UniCord Integration Tests', () => {
         token: 'interaction_token',
         channel_id: '789',
         user: { id: '321', username: 'user' },
-        data: { name: 'ping' }
+        data: { name: 'ping' },
       };
 
       await (bot as any).handleInteraction(slashInteraction);
 
       expect(pingHandler).toHaveBeenCalled();
-      expect(mockRest.post).toHaveBeenCalledWith('/interactions/123/interaction_token/callback', {
-        type: 4, // ChannelMessageWithSource
-        data: {
-          embeds: [{
-            title: 'Pong! 🏓',
-            description: 'Bot is working correctly',
-            color: 0x00ff00,
-            fields: [{ name: 'Response Time', value: '42ms', inline: true }],
-            timestamp: expect.any(String)
-          }],
-          components: [{
-            type: 1,
-            components: [{
-              type: 2,
-              style: 3, // Success
-              label: 'Click Me',
-              custom_id: 'ping_button'
-            }]
-          }]
-        }
-      });
+      expect(mockRest.post).toHaveBeenCalledWith(
+        '/interactions/123/interaction_token/callback',
+        {
+          type: 4, // ChannelMessageWithSource
+          data: {
+            embeds: [
+              {
+                title: 'Pong! 🏓',
+                description: 'Bot is working correctly',
+                color: 0x00ff00,
+                fields: [
+                  { name: 'Response Time', value: '42ms', inline: true },
+                ],
+                timestamp: expect.any(String),
+              },
+            ],
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 2,
+                    style: 3, // Success
+                    label: 'Click Me',
+                    custom_id: 'ping_button',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      );
 
       // Test button interaction
       const buttonInteraction = {
@@ -116,19 +128,22 @@ describe('UniCord Integration Tests', () => {
         token: 'button_token',
         channel_id: '789',
         user: { id: '321', username: 'user' },
-        data: { custom_id: 'ping_button', component_type: 2 }
+        data: { custom_id: 'ping_button', component_type: 2 },
       };
 
       await (bot as any).handleInteraction(buttonInteraction);
 
       expect(buttonHandler).toHaveBeenCalled();
-      expect(mockRest.post).toHaveBeenCalledWith('/interactions/456/button_token/callback', {
-        type: 7, // UpdateMessage
-        data: {
-          content: 'Button was clicked! ✅',
-          components: []
-        }
-      });
+      expect(mockRest.post).toHaveBeenCalledWith(
+        '/interactions/456/button_token/callback',
+        {
+          type: 7, // UpdateMessage
+          data: {
+            content: 'Button was clicked! ✅',
+            components: [],
+          },
+        },
+      );
 
       // Test mention handling
       const mentionMessage = {
@@ -138,7 +153,7 @@ describe('UniCord Integration Tests', () => {
         content: 'Hey <@987654321>, how are you?',
         mentions: [{ id: '987654321', username: 'TestBot' }],
         mention_roles: [],
-        attachments: []
+        attachments: [],
       };
 
       await (bot as any).handleMessage(mentionMessage);
@@ -151,10 +166,14 @@ describe('UniCord Integration Tests', () => {
         const fileData = {
           name: 'report.pdf',
           data: Buffer.from('PDF content here'),
-          contentType: 'application/pdf'
+          contentType: 'application/pdf',
         };
 
-        await bot.uploadFile(ctx.message.channel_id, fileData, 'Here is your report!');
+        await bot.uploadFile(
+          ctx.message.channel_id,
+          fileData,
+          'Here is your report!',
+        );
       });
 
       bot.command('upload', fileHandler);
@@ -166,7 +185,7 @@ describe('UniCord Integration Tests', () => {
         content: '!upload',
         mentions: [],
         mention_roles: [],
-        attachments: []
+        attachments: [],
       };
 
       await (bot as any).handleMessage(uploadMessage);
@@ -209,12 +228,17 @@ describe('UniCord Integration Tests', () => {
         content: '!test',
         mentions: [],
         mention_roles: [],
-        attachments: []
+        attachments: [],
       };
 
       await (bot as any).handleMessage(allowedMessage);
 
-      expect(executionOrder).toEqual(['auth', 'logging', 'command', 'logging_after']);
+      expect(executionOrder).toEqual([
+        'auth',
+        'logging',
+        'command',
+        'logging_after',
+      ]);
       expect(commandHandler).toHaveBeenCalled();
 
       // Reset for banned user test
@@ -229,7 +253,7 @@ describe('UniCord Integration Tests', () => {
         content: '!test',
         mentions: [],
         mention_roles: [],
-        attachments: []
+        attachments: [],
       };
 
       await (bot as any).handleMessage(bannedMessage);
@@ -248,33 +272,35 @@ describe('UniCord Integration Tests', () => {
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({
-            access_token: 'access_token_123',
-            token_type: 'Bearer',
-            expires_in: 3600,
-            refresh_token: 'refresh_token_123',
-            scope: 'identify email guilds connections'
-          })
+          json: () =>
+            Promise.resolve({
+              access_token: 'access_token_123',
+              token_type: 'Bearer',
+              expires_in: 3600,
+              refresh_token: 'refresh_token_123',
+              scope: 'identify email guilds connections',
+            }),
         })
         // Mock user fetch
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({
-            id: '123456789',
-            username: 'testuser',
-            discriminator: '0001',
-            global_name: 'Test User',
-            email: 'test@example.com',
-            avatar: 'a_animated_avatar_hash',
-            verified: true
-          })
+          json: () =>
+            Promise.resolve({
+              id: '123456789',
+              username: 'testuser',
+              discriminator: '0001',
+              global_name: 'Test User',
+              email: 'test@example.com',
+              avatar: 'a_animated_avatar_hash',
+              verified: true,
+            }),
         });
 
       const result = await exchangeCodeForTokenNode({
         clientId: 'client123',
         clientSecret: 'secret123',
         code: 'auth_code_received',
-        redirectUri: 'http://localhost:3000/callback'
+        redirectUri: 'http://localhost:3000/callback',
       });
 
       expect(result.user.username).toBe('testuser');
@@ -282,14 +308,16 @@ describe('UniCord Integration Tests', () => {
 
       // Test utility functions with received user data
       const avatarUrl = getUserAvatarURL(result.user, 512);
-      expect(avatarUrl).toBe('https://cdn.discordapp.com/avatars/123456789/a_animated_avatar_hash.gif?size=512');
+      expect(avatarUrl).toBe(
+        'https://cdn.discordapp.com/avatars/123456789/a_animated_avatar_hash.gif?size=512',
+      );
     });
 
     it('should handle browser OAuth with scopes', async () => {
       const oauth = new OAuth2({
         clientId: 'client123',
         redirectUri: 'http://localhost:3000/callback',
-        backendTokenURL: '/api/auth/discord'
+        backendTokenURL: '/api/auth/discord',
       });
 
       // Mock browser APIs (simplified)
@@ -297,9 +325,15 @@ describe('UniCord Integration Tests', () => {
       global.location = mockLocation;
 
       // Mock OAuth methods directly
-      const loginBasicSpy = vi.spyOn(oauth, 'loginBasic').mockImplementation(() => Promise.resolve());
-      const loginFullProfileSpy = vi.spyOn(oauth, 'loginFullProfile').mockImplementation(() => Promise.resolve());
-      const loginForBotManagementSpy = vi.spyOn(oauth, 'loginForBotManagement').mockImplementation(() => Promise.resolve());
+      const loginBasicSpy = vi
+        .spyOn(oauth, 'loginBasic')
+        .mockImplementation(() => Promise.resolve());
+      const loginFullProfileSpy = vi
+        .spyOn(oauth, 'loginFullProfile')
+        .mockImplementation(() => Promise.resolve());
+      const loginForBotManagementSpy = vi
+        .spyOn(oauth, 'loginForBotManagement')
+        .mockImplementation(() => Promise.resolve());
 
       // Test different login methods
       await oauth.loginBasic();
@@ -320,7 +354,7 @@ describe('UniCord Integration Tests', () => {
         name: 'Admin Guild',
         icon: null,
         owner: false,
-        permissions: '8' // Administrator
+        permissions: '8', // Administrator
       };
 
       const moderatorGuild = {
@@ -328,7 +362,7 @@ describe('UniCord Integration Tests', () => {
         name: 'Moderator Guild',
         icon: 'guild_icon_hash',
         owner: false,
-        permissions: '8192' // MANAGE_MESSAGES = 1 << 13 = 8192
+        permissions: '8192', // MANAGE_MESSAGES = 1 << 13 = 8192
       };
 
       const memberGuild = {
@@ -336,7 +370,7 @@ describe('UniCord Integration Tests', () => {
         name: 'Member Guild',
         icon: null,
         owner: false,
-        permissions: '2048' // SEND_MESSAGES only
+        permissions: '2048', // SEND_MESSAGES only
       };
 
       // Test admin permissions (should have all)
@@ -345,13 +379,21 @@ describe('UniCord Integration Tests', () => {
       expect(hasPermission(adminGuild, Permissions.MANAGE_MESSAGES)).toBe(true);
 
       // Test moderator permissions
-      expect(hasPermission(moderatorGuild, Permissions.ADMINISTRATOR)).toBe(false);
-      expect(hasPermission(moderatorGuild, Permissions.MANAGE_MESSAGES)).toBe(true);
-      expect(hasPermission(moderatorGuild, Permissions.SEND_MESSAGES)).toBe(false);
+      expect(hasPermission(moderatorGuild, Permissions.ADMINISTRATOR)).toBe(
+        false,
+      );
+      expect(hasPermission(moderatorGuild, Permissions.MANAGE_MESSAGES)).toBe(
+        true,
+      );
+      expect(hasPermission(moderatorGuild, Permissions.SEND_MESSAGES)).toBe(
+        false,
+      );
 
       // Test member permissions
       expect(hasPermission(memberGuild, Permissions.ADMINISTRATOR)).toBe(false);
-      expect(hasPermission(memberGuild, Permissions.MANAGE_MESSAGES)).toBe(false);
+      expect(hasPermission(memberGuild, Permissions.MANAGE_MESSAGES)).toBe(
+        false,
+      );
       expect(hasPermission(memberGuild, Permissions.SEND_MESSAGES)).toBe(true);
     });
   });
@@ -360,11 +402,11 @@ describe('UniCord Integration Tests', () => {
     it('should handle multi-step form with select menus and modals', async () => {
       const bot = new UniCordBot({
         token: 'test-token',
-        intents: 513
+        intents: 513,
       });
 
       const mockRest = {
-        post: vi.fn().mockResolvedValue({ id: '123' })
+        post: vi.fn().mockResolvedValue({ id: '123' }),
       };
 
       (bot as any).rest = mockRest;
@@ -373,25 +415,33 @@ describe('UniCord Integration Tests', () => {
       const startFormHandler = vi.fn(async (ctx) => {
         const selectMenu = bot.createStringSelect('category_select', [
           { label: 'Bug Report', value: 'bug', description: 'Report a bug' },
-          { label: 'Feature Request', value: 'feature', description: 'Request a new feature' },
-          { label: 'Question', value: 'question', description: 'Ask a question' }
+          {
+            label: 'Feature Request',
+            value: 'feature',
+            description: 'Request a new feature',
+          },
+          {
+            label: 'Question',
+            value: 'question',
+            description: 'Ask a question',
+          },
         ]);
 
         const actionRow = bot.createActionRow(selectMenu);
 
         await ctx.reply({
           content: 'Please select a category for your submission:',
-          components: [actionRow]
+          components: [actionRow],
         });
       });
 
       // Step 2: Handle category selection
       const categoryHandler = vi.fn(async (ctx) => {
         const selectedCategory = ctx.values?.[0];
-        
+
         await ctx.update({
           content: `You selected: ${selectedCategory}. Great! Your submission has been recorded.`,
-          components: []
+          components: [],
         });
       });
 
@@ -406,30 +456,49 @@ describe('UniCord Integration Tests', () => {
         token: 'form_token',
         channel_id: '789',
         user: { id: '321', username: 'user' },
-        data: { name: 'form' }
+        data: { name: 'form' },
       };
 
       await (bot as any).handleInteraction(formInteraction);
 
       expect(startFormHandler).toHaveBeenCalled();
-      expect(mockRest.post).toHaveBeenCalledWith('/interactions/123/form_token/callback', {
-        type: 4,
-        data: {
-          content: 'Please select a category for your submission:',
-          components: [{
-            type: 1,
-            components: [{
-              type: 3,
-              custom_id: 'category_select',
-              options: [
-                { label: 'Bug Report', value: 'bug', description: 'Report a bug' },
-                { label: 'Feature Request', value: 'feature', description: 'Request a new feature' },
-                { label: 'Question', value: 'question', description: 'Ask a question' }
-              ]
-            }]
-          }]
-        }
-      });
+      expect(mockRest.post).toHaveBeenCalledWith(
+        '/interactions/123/form_token/callback',
+        {
+          type: 4,
+          data: {
+            content: 'Please select a category for your submission:',
+            components: [
+              {
+                type: 1,
+                components: [
+                  {
+                    type: 3,
+                    custom_id: 'category_select',
+                    options: [
+                      {
+                        label: 'Bug Report',
+                        value: 'bug',
+                        description: 'Report a bug',
+                      },
+                      {
+                        label: 'Feature Request',
+                        value: 'feature',
+                        description: 'Request a new feature',
+                      },
+                      {
+                        label: 'Question',
+                        value: 'question',
+                        description: 'Ask a question',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      );
 
       // Test category selection
       const selectInteraction = {
@@ -439,10 +508,10 @@ describe('UniCord Integration Tests', () => {
         token: 'select_token',
         channel_id: '789',
         user: { id: '321', username: 'user' },
-        data: { 
+        data: {
           custom_id: 'category_select',
-          values: ['bug']
-        }
+          values: ['bug'],
+        },
       };
 
       await (bot as any).handleInteraction(selectInteraction);
@@ -459,14 +528,14 @@ describe('UniCord Integration Tests', () => {
         token: 'mod-bot-token',
         intents: 513,
         prefix: '!',
-        handleAllMessages: true
+        handleAllMessages: true,
       });
 
       const mockRest = {
         post: vi.fn().mockResolvedValue({ id: '123' }),
         delete: vi.fn().mockResolvedValue(null),
         put: vi.fn().mockResolvedValue({}),
-        patch: vi.fn().mockResolvedValue({})
+        patch: vi.fn().mockResolvedValue({}),
       };
 
       (bot as any).rest = mockRest;
@@ -475,17 +544,20 @@ describe('UniCord Integration Tests', () => {
       const autoModerationHandler = vi.fn(async (ctx) => {
         if (ctx.content.toLowerCase().includes('spam')) {
           await ctx.delete(); // Delete the message
-          
-          const embed = bot.createEmbed()
+
+          const embed = bot
+            .createEmbed()
             .setTitle('⚠️ Message Removed')
-            .setDescription('Your message was removed for containing prohibited content.')
+            .setDescription(
+              'Your message was removed for containing prohibited content.',
+            )
             .setColor(0xff0000)
             .addField('User', ctx.author.username, true)
             .addField('Reason', 'Spam content', true)
             .setTimestamp();
 
           await ctx.send({
-            embeds: [embed.toJSON()]
+            embeds: [embed.toJSON()],
           });
         }
       });
@@ -497,10 +569,12 @@ describe('UniCord Integration Tests', () => {
 
         // Simulate banning user
         await mockRest.put(`/guilds/${ctx.guild?.id}/bans/${userId}`, {
-          reason: reason
+          reason: reason,
         });
 
-        await ctx.reply(`✅ User <@${userId}> has been banned. Reason: ${reason}`);
+        await ctx.reply(
+          `✅ User <@${userId}> has been banned. Reason: ${reason}`,
+        );
       });
 
       bot.onMessage(autoModerationHandler);
@@ -514,13 +588,15 @@ describe('UniCord Integration Tests', () => {
         content: 'Check out this spam link!',
         mentions: [],
         mention_roles: [],
-        attachments: []
+        attachments: [],
       };
 
       await (bot as any).handleMessage(spamMessage);
 
       expect(autoModerationHandler).toHaveBeenCalled();
-      expect(mockRest.delete).toHaveBeenCalledWith('/channels/456/messages/123');
+      expect(mockRest.delete).toHaveBeenCalledWith(
+        '/channels/456/messages/123',
+      );
 
       // Test ban command
       const banMessage = {
@@ -531,14 +607,14 @@ describe('UniCord Integration Tests', () => {
         content: '!ban 789 Spamming the server',
         mentions: [],
         mention_roles: [],
-        attachments: []
+        attachments: [],
       };
 
       await (bot as any).handleMessage(banMessage);
 
       expect(banCommandHandler).toHaveBeenCalled();
       expect(mockRest.put).toHaveBeenCalledWith('/guilds/guild123/bans/789', {
-        reason: 'Spamming the server'
+        reason: 'Spamming the server',
       });
     });
   });

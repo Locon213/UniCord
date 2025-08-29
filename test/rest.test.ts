@@ -3,7 +3,10 @@ import { RestClient } from '../src/rest/client';
 
 describe('RestClient', () => {
   it('should GET', async () => {
-    const rest = new RestClient({ token: 'test', baseUrl: 'https://example.com' });
+    const rest = new RestClient({
+      token: 'test',
+      baseUrl: 'https://example.com',
+    });
     global.fetch = vi.fn(async () => ({
       ok: true,
       status: 200,

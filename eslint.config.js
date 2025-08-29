@@ -10,7 +10,7 @@ module.exports = [
       parser: tsparser,
       parserOptions: {
         ecmaVersion: 2022,
-        sourceType: 'module'
+        sourceType: 'module',
       },
       globals: {
         console: 'readonly',
@@ -25,23 +25,26 @@ module.exports = [
         crypto: 'readonly',
         sessionStorage: 'readonly',
         location: 'readonly',
-        NodeJS: 'readonly'
-      }
+        NodeJS: 'readonly',
+      },
     },
     plugins: {
-      '@typescript-eslint': tseslint
+      '@typescript-eslint': tseslint,
     },
     rules: {
       ...tseslint.configs.recommended.rules,
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'warn',
       'no-console': 'off',
       'prefer-const': 'error',
-      'no-undef': 'off'
-    }
+      'no-undef': 'off',
+    },
   },
   {
     files: ['test/**/*.ts', 'examples/**/*.ts'],
@@ -49,7 +52,7 @@ module.exports = [
       parser: tsparser,
       parserOptions: {
         ecmaVersion: 2022,
-        sourceType: 'module'
+        sourceType: 'module',
       },
       globals: {
         console: 'readonly',
@@ -58,36 +61,39 @@ module.exports = [
         setTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
-        clearTimeout: 'readonly'
-      }
+        clearTimeout: 'readonly',
+      },
     },
     plugins: {
-      '@typescript-eslint': tseslint
+      '@typescript-eslint': tseslint,
     },
     rules: {
       ...tseslint.configs.recommended.rules,
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'off',
       'no-console': 'off',
-      'no-undef': 'off'
-    }
+      'no-undef': 'off',
+    },
   },
   {
     files: ['**/*.js', '**/*.mjs'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'module'
-    }
+      sourceType: 'module',
+    },
   },
   {
     ignores: [
-      'dist/**', 
-      'node_modules/**', 
-      '*.config.js', 
+      'dist/**',
+      'node_modules/**',
+      '*.config.js',
       '*.config.ts',
       'examples/**',
       'wiki/**',
-      'coverage/**'
-    ]
-  }
+      'coverage/**',
+    ],
+  },
 ];

@@ -50,6 +50,7 @@ npm install @locon213/unicord
 ## 🚀 Quick Start
 
 ### Basic Bot Setup
+
 ```typescript
 import { UniCordBot, ButtonStyle } from '@locon213/unicord';
 
@@ -58,28 +59,37 @@ const bot = new UniCordBot({
   intents: 513, // GUILDS + GUILD_MESSAGES
   prefix: '!',
   mentionPrefix: true,
-  handleAllMessages: true
+  handleAllMessages: true,
 });
 
 // Text command with enhanced options
-bot.command('ping', async (ctx) => {
-  await ctx.reply('🏓 Pong!');
-}, {
-  aliases: ['p', 'pingpong'],
-  description: 'Check if the bot is alive',
-  category: 'Utility'
-});
+bot.command(
+  'ping',
+  async (ctx) => {
+    await ctx.reply('🏓 Pong!');
+  },
+  {
+    aliases: ['p', 'pingpong'],
+    description: 'Check if the bot is alive',
+    category: 'Utility',
+  },
+);
 
 // Slash command with interactive components
 bot.slash('hello', { description: 'Say hello with buttons' }, async (ctx) => {
-  const embed = bot.createEmbed()
+  const embed = bot
+    .createEmbed()
     .setTitle('Hello World!')
     .setDescription('Click a button below!')
     .setColor(0x00ff00);
-    
-  const button = bot.createButton('Click me!', 'hello_btn', ButtonStyle.Primary);
+
+  const button = bot.createButton(
+    'Click me!',
+    'hello_btn',
+    ButtonStyle.Primary,
+  );
   const row = bot.createActionRow(button);
-  
+
   await ctx.reply({ embeds: [embed.toJSON()], components: [row] });
 });
 
@@ -104,6 +114,7 @@ bot.start();
 ```
 
 ### OAuth2 Integration
+
 ```typescript
 import { OAuth2, exchangeCodeForTokenNode } from '@locon213/unicord';
 
@@ -111,7 +122,7 @@ import { OAuth2, exchangeCodeForTokenNode } from '@locon213/unicord';
 const oauth = new OAuth2({
   clientId: 'your-client-id',
   redirectUri: 'http://localhost:3000/callback',
-  backendTokenURL: '/api/auth/discord'
+  backendTokenURL: '/api/auth/discord',
 });
 
 // Different login scopes
@@ -123,13 +134,14 @@ const result = await exchangeCodeForTokenNode({
   clientId: process.env.DISCORD_CLIENT_ID!,
   clientSecret: process.env.DISCORD_CLIENT_SECRET!,
   code: authCode,
-  redirectUri: redirectUri
+  redirectUri: redirectUri,
 });
 ```
 
 ## 🐳 Docker Deployment
 
 ### Quick Start
+
 ```bash
 # Build and run with Docker Compose
 npm run docker:compose
@@ -140,7 +152,9 @@ npm run docker:run
 ```
 
 ### Complete Stack
+
 Our Docker setup includes:
+
 - **Bot Service** - Multi-stage optimized build
 - **Redis** - Caching and session storage
 - **PostgreSQL** - Persistent data storage
@@ -148,7 +162,9 @@ Our Docker setup includes:
 - **Prometheus** - Monitoring and metrics
 
 ### Environment Variables
+
 Create a `.env` file:
+
 ```env
 DISCORD_TOKEN=your_bot_token
 DISCORD_CLIENT_ID=your_client_id
@@ -163,7 +179,7 @@ POSTGRES_PASSWORD=unicord123
 Complete documentation is available in the [WIKI](./WIKI/):
 
 - [Getting Started](./WIKI/Getting-Started.md) - Setup and basic usage
-- [Bot Commands](./WIKI/Bot-Commands.md) - Command handling and components  
+- [Bot Commands](./WIKI/Bot-Commands.md) - Command handling and components
 - [OAuth2 Integration](./WIKI/OAuth2-PKCE.md) - Authentication and user data
 - [API Reference](./WIKI/API-Reference.md) - Complete API documentation
 - [Sharding](./WIKI/Sharding.md) - Scaling for large bots
@@ -182,6 +198,7 @@ npm test
 ```
 
 **Commands:**
+
 - `npm run build` - Build the library
 - `npm run dev` - Watch mode for development
 - `npm run test` - Run tests

@@ -13,7 +13,7 @@ describe('UniCordBot Enhanced Features', () => {
       intents: 513, // GUILDS + GUILD_MESSAGES
       prefix: '!',
       mentionPrefix: true,
-      handleAllMessages: true
+      handleAllMessages: true,
     });
 
     // Mock REST client methods
@@ -26,13 +26,13 @@ describe('UniCordBot Enhanced Features', () => {
       put: mockRestPut,
       postFormData: mockRestPostFormData,
       patch: vi.fn().mockResolvedValue({ id: '123' }),
-      delete: vi.fn().mockResolvedValue(null)
+      delete: vi.fn().mockResolvedValue(null),
     };
 
     (bot as any).user = {
       id: '987654321',
       username: 'TestBot',
-      discriminator: '0001'
+      discriminator: '0001',
     };
   });
 
@@ -43,24 +43,24 @@ describe('UniCordBot Enhanced Features', () => {
   describe('Component Creation', () => {
     it('should create buttons correctly', () => {
       const button = bot.createButton('Click Me', 'test_button', 1); // Primary style
-      
+
       expect(button).toEqual({
         type: 2,
         style: 1, // Primary
         label: 'Click Me',
-        custom_id: 'test_button'
+        custom_id: 'test_button',
       });
     });
 
     it('should create action rows', () => {
       const button1 = bot.createButton('Button 1', 'btn1');
       const button2 = bot.createButton('Button 2', 'btn2');
-      
+
       const actionRow = bot.createActionRow(button1, button2);
-      
+
       expect(actionRow).toEqual({
         type: 1,
-        components: [button1, button2]
+        components: [button1, button2],
       });
     });
   });
@@ -69,14 +69,14 @@ describe('UniCordBot Enhanced Features', () => {
     it('should register text commands', () => {
       const handler = vi.fn();
       bot.command('test', handler);
-      
+
       expect((bot as any).commands.has('test')).toBe(true);
     });
 
     it('should register component handlers', () => {
       const handler = vi.fn();
       bot.component('test_button', handler);
-      
+
       expect((bot as any).components.has('test_button')).toBe(true);
     });
   });
@@ -85,7 +85,7 @@ describe('UniCordBot Enhanced Features', () => {
     it('should handle prefix commands', async () => {
       const handler = vi.fn();
       bot.command('test', handler);
-      
+
       const mockMessage = {
         id: '123',
         channel_id: '456',
@@ -93,11 +93,11 @@ describe('UniCordBot Enhanced Features', () => {
         content: '!test arg1 arg2',
         mentions: [],
         mention_roles: [],
-        attachments: []
+        attachments: [],
       };
 
       await (bot as any).handleMessage(mockMessage);
-      
+
       expect(handler).toHaveBeenCalled();
       const ctx = handler.mock.calls[0][0];
       expect(ctx.args).toEqual(['arg1', 'arg2']);
@@ -109,11 +109,11 @@ describe('UniCordBot Enhanced Features', () => {
       const fileData = {
         name: 'test.txt',
         data: Buffer.from('Hello World'),
-        contentType: 'text/plain'
+        contentType: 'text/plain',
       };
 
       await bot.uploadFile('123', fileData, 'Here is the file');
-      
+
       expect(mockRestPostFormData).toHaveBeenCalled();
       const [path, formData] = mockRestPostFormData.mock.calls[0];
       expect(path).toBe('/channels/123/messages');
@@ -123,15 +123,16 @@ describe('UniCordBot Enhanced Features', () => {
 
   describe('Embed Builder', () => {
     it('should create embeds correctly', () => {
-      const embed = bot.createEmbed()
+      const embed = bot
+        .createEmbed()
         .setTitle('Test Title')
         .setDescription('Test Description')
         .setColor(0x00ff00)
         .addField('Field 1', 'Value 1', true)
         .setFooter('Footer text');
-      
+
       const embedData = embed.toJSON();
-      
+
       expect(embedData.title).toBe('Test Title');
       expect(embedData.description).toBe('Test Description');
       expect(embedData.color).toBe(0x00ff00);
@@ -139,7 +140,7 @@ describe('UniCordBot Enhanced Features', () => {
       expect(embedData.fields![0]).toEqual({
         name: 'Field 1',
         value: 'Value 1',
-        inline: true
+        inline: true,
       });
       expect(embedData.footer?.text).toBe('Footer text');
     });

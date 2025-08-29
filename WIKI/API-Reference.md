@@ -11,14 +11,15 @@ new UniCordBot(options: BotOptions)
 ```
 
 **BotOptions:**
+
 ```typescript
 interface BotOptions {
-  token: string;                // Discord bot token
-  intents: number;             // Gateway intents
-  prefix?: string;             // Text command prefix (default: '!')
-  mentionPrefix?: boolean;     // Allow @bot commands (default: false)  
+  token: string; // Discord bot token
+  intents: number; // Gateway intents
+  prefix?: string; // Text command prefix (default: '!')
+  mentionPrefix?: boolean; // Allow @bot commands (default: false)
   handleAllMessages?: boolean; // Process all messages (default: false)
-  autoSyncCommands?: boolean;  // Auto-sync slash commands (default: false)
+  autoSyncCommands?: boolean; // Auto-sync slash commands (default: false)
 }
 ```
 
@@ -28,7 +29,7 @@ interface BotOptions {
 // Text commands
 bot.command(name: string, handler: (ctx: MessageContext) => Promise<void>)
 
-// Slash commands  
+// Slash commands
 bot.slash(name: string, options: SlashCommandOptions, handler: (ctx: InteractionContext) => Promise<void>)
 
 // Component handlers
@@ -101,7 +102,7 @@ interface MessageContext {
   attachments: DiscordAttachment[];
   args: string[];
   bot: UniCordBot;
-  
+
   // Methods
   reply(content: string | MessagePayload): Promise<any>;
   send(content: string | MessagePayload): Promise<any>;
@@ -124,14 +125,18 @@ interface InteractionContext {
   guild?: DiscordGuild;
   options: Map<string, any>;
   bot: UniCordBot;
-  
+
   // Methods
   reply(content: string | MessagePayload): Promise<any>;
   editReply(content: string | MessagePayload): Promise<any>;
   deleteReply(): Promise<any>;
   followUp(content: string | MessagePayload): Promise<any>;
   defer(ephemeral?: boolean): Promise<any>;
-  showModal(title: string, customId: string, components: DiscordActionRow[]): Promise<any>;
+  showModal(
+    title: string,
+    customId: string,
+    components: DiscordActionRow[],
+  ): Promise<any>;
   createButton: typeof bot.createButton;
   createActionRow: typeof bot.createActionRow;
 }
@@ -149,7 +154,7 @@ interface ComponentContext {
   customId: string;
   values?: string[];
   bot: UniCordBot;
-  
+
   // Methods
   reply(content: string | MessagePayload): Promise<any>;
   update(content: string | MessagePayload): Promise<any>;
@@ -164,17 +169,17 @@ interface ComponentContext {
 
 ```typescript
 class EmbedBuilder {
-  setTitle(title: string): EmbedBuilder
-  setDescription(description: string): EmbedBuilder
-  setColor(color: number): EmbedBuilder
-  setAuthor(name: string, iconUrl?: string, url?: string): EmbedBuilder
-  setFooter(text: string, iconUrl?: string): EmbedBuilder
-  setImage(url: string): EmbedBuilder
-  setThumbnail(url: string): EmbedBuilder
-  addField(name: string, value: string, inline?: boolean): EmbedBuilder
-  setTimestamp(date?: Date): EmbedBuilder
-  setUrl(url: string): EmbedBuilder
-  toJSON(): DiscordEmbed
+  setTitle(title: string): EmbedBuilder;
+  setDescription(description: string): EmbedBuilder;
+  setColor(color: number): EmbedBuilder;
+  setAuthor(name: string, iconUrl?: string, url?: string): EmbedBuilder;
+  setFooter(text: string, iconUrl?: string): EmbedBuilder;
+  setImage(url: string): EmbedBuilder;
+  setThumbnail(url: string): EmbedBuilder;
+  addField(name: string, value: string, inline?: boolean): EmbedBuilder;
+  setTimestamp(date?: Date): EmbedBuilder;
+  setUrl(url: string): EmbedBuilder;
+  toJSON(): DiscordEmbed;
 }
 ```
 
@@ -244,7 +249,7 @@ getDefaultAvatarURL(user: DiscordUser): string
 // Guild utilities
 getGuildIconURL(guild: DiscordGuild, size?: number): string
 
-// Permission utilities  
+// Permission utilities
 hasPermission(guild: DiscordGuild, permission: string): boolean
 ```
 
@@ -258,7 +263,7 @@ enum ButtonStyle {
   Secondary = 2,
   Success = 3,
   Danger = 4,
-  Link = 5
+  Link = 5,
 }
 ```
 
@@ -272,7 +277,7 @@ enum InteractionResponseType {
   DeferredUpdateMessage = 6,
   UpdateMessage = 7,
   ApplicationCommandAutocompleteResult = 8,
-  Modal = 9
+  Modal = 9,
 }
 ```
 
@@ -288,7 +293,8 @@ export const DiscordScopes = {
   WEBHOOK_INCOMING: 'webhook.incoming',
   APPLICATIONS_COMMANDS: 'applications.commands',
   APPLICATIONS_COMMANDS_UPDATE: 'applications.commands.update',
-  APPLICATIONS_COMMANDS_PERMISSIONS_UPDATE: 'applications.commands.permissions.update'
+  APPLICATIONS_COMMANDS_PERMISSIONS_UPDATE:
+    'applications.commands.permissions.update',
 };
 ```
 
@@ -321,7 +327,7 @@ export const Permissions = {
   MUTE_MEMBERS: '4194304',
   DEAFEN_MEMBERS: '8388608',
   MOVE_MEMBERS: '16777216',
-  USE_VAD: '33554432'
+  USE_VAD: '33554432',
 };
 ```
 
@@ -329,12 +335,12 @@ export const Permissions = {
 
 ```typescript
 class RestClient {
-  get(path: string): Promise<any>
-  post(path: string, body: any): Promise<any>
-  postFormData(path: string, formData: FormData): Promise<any>
-  put(path: string, body: any): Promise<any>
-  patch(path: string, body: any): Promise<any>
-  delete(path: string, body?: any): Promise<any>
+  get(path: string): Promise<any>;
+  post(path: string, body: any): Promise<any>;
+  postFormData(path: string, formData: FormData): Promise<any>;
+  put(path: string, body: any): Promise<any>;
+  patch(path: string, body: any): Promise<any>;
+  delete(path: string, body?: any): Promise<any>;
 }
 ```
 
@@ -378,6 +384,7 @@ try {
 ## Examples
 
 See the `examples/` directory for complete working examples:
+
 - `examples/bot-basic/` - Simple echo bot
 - `examples/bot-slash/` - Slash commands
 - `examples/enhanced-bot/` - Advanced features

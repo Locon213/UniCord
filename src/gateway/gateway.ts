@@ -12,7 +12,7 @@ export interface GatewayOptions {
 
 interface Payload {
   op: number;
-  d?: any;
+  d?: unknown;
   s?: number;
   t?: string;
 }
@@ -31,14 +31,17 @@ export class Gateway extends EventEmitter {
   }
 
   connect() {
-    const url = this.options.url || 'wss://gateway.discord.gg/?v=10&encoding=json';
+    const url =
+      this.options.url || 'wss://gateway.discord.gg/?v=10&encoding=json';
     this.ws = new WebSocket(url);
 
     this.ws.on('open', () => {
       logger.info('Gateway connected');
     });
 
-    this.ws.on('message', (data: WebSocket.RawData) => this.handleMessage(data.toString()));
+    this.ws.on('message', (data: WebSocket.RawData) =>
+      this.handleMessage(data.toString()),
+    );
     this.ws.on('close', () => this.reconnect());
     this.ws.on('error', () => this.reconnect());
   }
@@ -63,7 +66,11 @@ export class Gateway extends EventEmitter {
     if (!this.sessionId) return this.identify();
     this.send({
       op: 6,
-      d: { token: this.options.token, session_id: this.sessionId, seq: this.seq },
+      d: {
+        token: this.options.token,
+        session_id: this.sessionId,
+        seq: this.seq,
+      },
     });
   }
 
@@ -82,14 +89,18 @@ export class Gateway extends EventEmitter {
     if (packet.s !== undefined) this.seq = packet.s;
 
     switch (packet.op) {
-      case 0:
+      case 0: {
         if (packet.t === 'READY') {
-          this.sessionId = packet.d.session_id;
-          this.resumeUrl = packet.d.resume_gateway_url;
+          const data = packet.d as { session_id: string; resume_gateway_url: string };
+          this.sessionId = data.session_id;
+          this.resumeUrl = data.resume_gateway_url;
           this.reconnectAttempts = 0;
         }
-        this.emit(packet.t!, packet.d);
+        if (packet.t) {
+          this.emit(packet.t, packet.d);
+        }
         break;
+      }
       case 1:
         this.heartbeat();
         break;
@@ -99,11 +110,13 @@ export class Gateway extends EventEmitter {
       case 9:
         setTimeout(() => this.identify(), 5000);
         break;
-      case 10:
-        this.startHeartbeat(packet.d.heartbeat_interval);
+      case 10: {
+        const heartbeatData = packet.d as { heartbeat_interval: number };
+        this.startHeartbeat(heartbeatData.heartbeat_interval);
         if (this.sessionId) this.resume();
         else this.identify();
         break;
+      }
       case 11:
         // heartbeat ACK
         break;

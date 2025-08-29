@@ -29,28 +29,28 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org'
-      
+
       - name: Configure Git
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-      
+
       - run: npm ci
       - run: npm run build
       - run: npm test
       - run: npm run lint
-      
+
       - name: Determine version and check status
         id: version
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-          
+
           if [ -n "${{ github.event.inputs.custom_version }}" ]; then
             TARGET_VERSION="${{ github.event.inputs.custom_version }}"
             echo "Using custom version: $TARGET_VERSION"
@@ -72,11 +72,11 @@ jobs:
             esac
             echo "Using calculated version: $TARGET_VERSION"
           fi
-          
+
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
           echo "TARGET_VERSION=$TARGET_VERSION" >> $GITHUB_ENV
           echo "target_version=$TARGET_VERSION" >> $GITHUB_OUTPUT
-          
+
           # Check if version needs updating
           if [ "$CURRENT_VERSION" = "$TARGET_VERSION" ]; then
             echo "VERSION_NEEDS_UPDATE=false" >> $GITHUB_ENV
@@ -85,7 +85,7 @@ jobs:
             echo "VERSION_NEEDS_UPDATE=true" >> $GITHUB_ENV
             echo "Version will be updated from $CURRENT_VERSION to $TARGET_VERSION"
           fi
-          
+
           # Check if tag exists
           if git rev-parse "v$TARGET_VERSION" >/dev/null 2>&1; then
             echo "TAG_EXISTS=true" >> $GITHUB_ENV
@@ -94,7 +94,7 @@ jobs:
             echo "TAG_EXISTS=false" >> $GITHUB_ENV
             echo "Tag v$TARGET_VERSION will be created"
           fi
-      
+
       - name: Update version in package.json
         if: env.VERSION_NEEDS_UPDATE == 'true'
         run: |
@@ -105,22 +105,22 @@ jobs:
           fi
           git add package.json package-lock.json
           git commit -m "Release version ${{ env.TARGET_VERSION }}"
-      
+
       - name: Create and push tag
         if: env.TAG_EXISTS == 'false'
         run: |
           git tag -a "v${{ env.TARGET_VERSION }}" -m "Release ${{ env.TARGET_VERSION }}"
           git push origin "v${{ env.TARGET_VERSION }}"
-      
+
       - name: Push version changes
         if: env.VERSION_NEEDS_UPDATE == 'true'
         run: |
           git push origin main
-      
+
       - run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

@@ -15,7 +15,11 @@ describe('Gateway', () => {
         if (p.op === 1) heartbeat = true;
       });
     });
-    const gw = new Gateway({ token: 'x', intents: 0, url: 'ws://localhost:8765' });
+    const gw = new Gateway({
+      token: 'x',
+      intents: 0,
+      url: 'ws://localhost:8765',
+    });
     gw.connect();
     await wait(120);
     expect(heartbeat).toBe(true);

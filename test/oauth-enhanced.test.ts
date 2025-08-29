@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  exchangeCodeForTokenNode, 
+import {
+  exchangeCodeForTokenNode,
   getEnhancedUserData,
   getUserAvatarURL,
   getDefaultAvatarURL,
@@ -11,7 +11,7 @@ import {
   refreshAccessToken,
   revokeAccessToken,
   OAuth2,
-  DiscordScopes
+  DiscordScopes,
 } from '../src/index';
 
 // Mock fetch globally
@@ -30,7 +30,7 @@ describe('OAuth Enhanced Features', () => {
         token_type: 'Bearer',
         expires_in: 3600,
         refresh_token: 'refresh_token_123',
-        scope: 'identify email'
+        scope: 'identify email',
       };
 
       const mockUserResponse = {
@@ -38,24 +38,24 @@ describe('OAuth Enhanced Features', () => {
         username: 'testuser',
         discriminator: '1234',
         email: 'test@example.com',
-        verified: true
+        verified: true,
       };
 
       mockFetch
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve(mockTokenResponse)
+          json: () => Promise.resolve(mockTokenResponse),
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve(mockUserResponse)
+          json: () => Promise.resolve(mockUserResponse),
         });
 
       const result = await exchangeCodeForTokenNode({
         clientId: 'client123',
         clientSecret: 'secret123',
         code: 'auth_code',
-        redirectUri: 'http://localhost:3000/callback'
+        redirectUri: 'http://localhost:3000/callback',
       });
 
       expect(result.tokens).toEqual(mockTokenResponse);
@@ -68,7 +68,7 @@ describe('OAuth Enhanced Features', () => {
         id: '123456789',
         username: 'testuser',
         discriminator: '1234',
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
 
       const mockGuilds = [
@@ -77,8 +77,8 @@ describe('OAuth Enhanced Features', () => {
           name: 'Test Guild',
           icon: 'guild_icon',
           owner: true,
-          permissions: '8' // Administrator
-        }
+          permissions: '8', // Administrator
+        },
       ];
 
       const mockConnections = [
@@ -86,16 +86,29 @@ describe('OAuth Enhanced Features', () => {
           id: 'connection123',
           name: 'GitHub',
           type: 'github',
-          verified: true
-        }
+          verified: true,
+        },
       ];
 
       mockFetch
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockUser) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockGuilds) })
-        .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockConnections) });
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockUser),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockGuilds),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockConnections),
+        });
 
-      const result = await getEnhancedUserData('access_token_123', ['identify', 'guilds', 'connections']);
+      const result = await getEnhancedUserData('access_token_123', [
+        'identify',
+        'guilds',
+        'connections',
+      ]);
 
       expect(result.user).toEqual(mockUser);
       expect(result.guilds).toEqual(mockGuilds);
@@ -106,22 +119,29 @@ describe('OAuth Enhanced Features', () => {
       const mockResponse = {
         access_token: 'new_access_token',
         token_type: 'Bearer',
-        expires_in: 3600
+        expires_in: 3600,
       };
 
       mockFetch.mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockResponse)
+        json: () => Promise.resolve(mockResponse),
       });
 
-      const result = await refreshAccessToken('client123', 'secret123', 'refresh_token_123');
+      const result = await refreshAccessToken(
+        'client123',
+        'secret123',
+        'refresh_token_123',
+      );
 
       expect(result).toEqual(mockResponse);
-      expect(mockFetch).toHaveBeenCalledWith('https://discord.com/api/oauth2/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: expect.any(URLSearchParams)
-      });
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://discord.com/api/oauth2/token',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: expect.any(URLSearchParams),
+        },
+      );
     });
 
     it('should revoke access token', async () => {
@@ -129,11 +149,14 @@ describe('OAuth Enhanced Features', () => {
 
       await revokeAccessToken('client123', 'secret123', 'access_token_123');
 
-      expect(mockFetch).toHaveBeenCalledWith('https://discord.com/api/oauth2/token/revoke', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: expect.any(URLSearchParams)
-      });
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://discord.com/api/oauth2/token/revoke',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: expect.any(URLSearchParams),
+        },
+      );
     });
   });
 
@@ -143,11 +166,13 @@ describe('OAuth Enhanced Features', () => {
         id: '123456789',
         username: 'testuser',
         discriminator: '1234',
-        avatar: 'avatar_hash_123'
+        avatar: 'avatar_hash_123',
       };
 
       const avatarUrl = getUserAvatarURL(user, 512);
-      expect(avatarUrl).toBe('https://cdn.discordapp.com/avatars/123456789/avatar_hash_123.png?size=512');
+      expect(avatarUrl).toBe(
+        'https://cdn.discordapp.com/avatars/123456789/avatar_hash_123.png?size=512',
+      );
     });
 
     it('should get animated avatar URL', () => {
@@ -155,18 +180,20 @@ describe('OAuth Enhanced Features', () => {
         id: '123456789',
         username: 'testuser',
         discriminator: '1234',
-        avatar: 'a_animated_avatar_hash'
+        avatar: 'a_animated_avatar_hash',
       };
 
       const avatarUrl = getUserAvatarURL(user);
-      expect(avatarUrl).toBe('https://cdn.discordapp.com/avatars/123456789/a_animated_avatar_hash.gif?size=256');
+      expect(avatarUrl).toBe(
+        'https://cdn.discordapp.com/avatars/123456789/a_animated_avatar_hash.gif?size=256',
+      );
     });
 
     it('should return null for users without avatar', () => {
       const user = {
         id: '123456789',
         username: 'testuser',
-        discriminator: '1234'
+        discriminator: '1234',
       };
 
       const avatarUrl = getUserAvatarURL(user);
@@ -177,7 +204,7 @@ describe('OAuth Enhanced Features', () => {
       const user = {
         id: '123456789',
         username: 'testuser',
-        discriminator: '1234'
+        discriminator: '1234',
       };
 
       const defaultUrl = getDefaultAvatarURL(user);
@@ -189,7 +216,7 @@ describe('OAuth Enhanced Features', () => {
         id: '123456789',
         username: 'testuser',
         discriminator: '1234',
-        global_name: 'Test User Display'
+        global_name: 'Test User Display',
       };
 
       const displayName = getUserDisplayName(user);
@@ -200,7 +227,7 @@ describe('OAuth Enhanced Features', () => {
       const user = {
         id: '123456789',
         username: 'testuser',
-        discriminator: '1234'
+        discriminator: '1234',
       };
 
       const displayName = getUserDisplayName(user);
@@ -213,11 +240,13 @@ describe('OAuth Enhanced Features', () => {
         name: 'Test Guild',
         icon: 'guild_icon_hash',
         owner: false,
-        permissions: '0'
+        permissions: '0',
       };
 
       const iconUrl = getGuildIconURL(guild, 128);
-      expect(iconUrl).toBe('https://cdn.discordapp.com/icons/guild123/guild_icon_hash.png?size=128');
+      expect(iconUrl).toBe(
+        'https://cdn.discordapp.com/icons/guild123/guild_icon_hash.png?size=128',
+      );
     });
 
     it('should check permissions correctly', () => {
@@ -225,7 +254,7 @@ describe('OAuth Enhanced Features', () => {
         id: 'guild123',
         name: 'Test Guild',
         owner: false,
-        permissions: '8' // Administrator permission
+        permissions: '8', // Administrator permission
       };
 
       expect(hasPermission(guild, Permissions.ADMINISTRATOR)).toBe(true);
@@ -238,7 +267,7 @@ describe('OAuth Enhanced Features', () => {
         id: 'guild123',
         name: 'Test Guild',
         owner: false,
-        permissions: '2048' // SEND_MESSAGES only
+        permissions: '2048', // SEND_MESSAGES only
       };
 
       expect(hasPermission(guild, Permissions.SEND_MESSAGES)).toBe(true);
@@ -254,7 +283,7 @@ describe('OAuth Enhanced Features', () => {
       oauth = new OAuth2({
         clientId: 'client123',
         redirectUri: 'http://localhost:3000/callback',
-        backendTokenURL: '/api/token'
+        backendTokenURL: '/api/token',
       });
     });
 
@@ -267,26 +296,34 @@ describe('OAuth Enhanced Features', () => {
     });
 
     it('should provide convenience login methods', async () => {
-      const loginSpy = vi.spyOn(oauth, 'login').mockImplementation(() => Promise.resolve());
+      const loginSpy = vi
+        .spyOn(oauth, 'login')
+        .mockImplementation(() => Promise.resolve());
 
       await oauth.loginBasic();
       expect(loginSpy).toHaveBeenCalledWith([DiscordScopes.IDENTIFY]);
 
       await oauth.loginWithEmail();
-      expect(loginSpy).toHaveBeenCalledWith([DiscordScopes.IDENTIFY, DiscordScopes.EMAIL]);
+      expect(loginSpy).toHaveBeenCalledWith([
+        DiscordScopes.IDENTIFY,
+        DiscordScopes.EMAIL,
+      ]);
 
       await oauth.loginFullProfile();
       expect(loginSpy).toHaveBeenCalledWith([
         DiscordScopes.IDENTIFY,
         DiscordScopes.EMAIL,
         DiscordScopes.GUILDS,
-        DiscordScopes.CONNECTIONS
+        DiscordScopes.CONNECTIONS,
       ]);
 
       await oauth.loginForBotManagement('8');
-      expect(loginSpy).toHaveBeenCalledWith([DiscordScopes.BOT, DiscordScopes.APPLICATIONS_COMMANDS], {
-        permissions: '8'
-      });
+      expect(loginSpy).toHaveBeenCalledWith(
+        [DiscordScopes.BOT, DiscordScopes.APPLICATIONS_COMMANDS],
+        {
+          permissions: '8',
+        },
+      );
     });
   });
 
@@ -294,36 +331,39 @@ describe('OAuth Enhanced Features', () => {
     it('should handle token exchange errors', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
-        text: () => Promise.resolve('Invalid authorization code')
+        text: () => Promise.resolve('Invalid authorization code'),
       });
 
-      await expect(exchangeCodeForTokenNode({
-        clientId: 'client123',
-        code: 'invalid_code',
-        redirectUri: 'http://localhost:3000/callback'
-      })).rejects.toThrow('Invalid authorization code');
+      await expect(
+        exchangeCodeForTokenNode({
+          clientId: 'client123',
+          code: 'invalid_code',
+          redirectUri: 'http://localhost:3000/callback',
+        }),
+      ).rejects.toThrow('Invalid authorization code');
     });
 
     it('should handle refresh token errors', async () => {
       mockFetch.mockResolvedValue({
         ok: false,
-        statusText: 'Invalid refresh token'
+        statusText: 'Invalid refresh token',
       });
 
-      await expect(refreshAccessToken('client123', 'secret123', 'invalid_refresh'))
-        .rejects.toThrow('Failed to refresh token: Invalid refresh token');
+      await expect(
+        refreshAccessToken('client123', 'secret123', 'invalid_refresh'),
+      ).rejects.toThrow('Failed to refresh token: Invalid refresh token');
     });
 
     it('should handle callback state mismatch', async () => {
       const oauth = new OAuth2({
         clientId: 'client123',
         redirectUri: 'http://localhost:3000/callback',
-        backendTokenURL: '/api/token'
+        backendTokenURL: '/api/token',
       });
 
       // Mock sessionStorage for this specific test
       const mockSessionStorage = {
-        getItem: vi.fn().mockReturnValue('correct_state')
+        getItem: vi.fn().mockReturnValue('correct_state'),
       };
       global.sessionStorage = mockSessionStorage as any;
       global.location = { search: '?code=auth_code&state=wrong_state' } as any;

@@ -10,7 +10,7 @@ import { OAuth2, DiscordScopes } from '@locon213/unicord';
 const oauth = new OAuth2({
   clientId: 'your-discord-client-id',
   redirectUri: 'http://localhost:3000/callback',
-  backendTokenURL: '/api/auth/discord'
+  backendTokenURL: '/api/auth/discord',
 });
 
 // Basic user authentication
@@ -34,48 +34,52 @@ await oauth.login([
   DiscordScopes.IDENTIFY,
   DiscordScopes.EMAIL,
   DiscordScopes.GUILDS,
-  DiscordScopes.CONNECTIONS
+  DiscordScopes.CONNECTIONS,
 ]);
 
 // Available scopes
-DiscordScopes.IDENTIFY          // Basic user info
-DiscordScopes.EMAIL             // User email
-DiscordScopes.GUILDS            // User's Discord servers
-DiscordScopes.CONNECTIONS       // Connected accounts (GitHub, etc.)
-DiscordScopes.BOT               // Bot permissions
-DiscordScopes.WEBHOOK_INCOMING  // Webhook permissions
+DiscordScopes.IDENTIFY; // Basic user info
+DiscordScopes.EMAIL; // User email
+DiscordScopes.GUILDS; // User's Discord servers
+DiscordScopes.CONNECTIONS; // Connected accounts (GitHub, etc.)
+DiscordScopes.BOT; // Bot permissions
+DiscordScopes.WEBHOOK_INCOMING; // Webhook permissions
 ```
 
 ## Server-side Token Exchange
 
 ```typescript
-import { exchangeCodeForTokenNode, getUserDisplayName, hasPermission } from '@locon213/unicord';
+import {
+  exchangeCodeForTokenNode,
+  getUserDisplayName,
+  hasPermission,
+} from '@locon213/unicord';
 
 // Express.js route example
 app.post('/api/auth/discord', async (req, res) => {
   const { code, redirect_uri } = req.body;
-  
+
   try {
     const result = await exchangeCodeForTokenNode({
       clientId: process.env.DISCORD_CLIENT_ID!,
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
       code,
-      redirectUri: redirect_uri
+      redirectUri: redirect_uri,
     });
-    
+
     // Enhanced user data
     const displayName = getUserDisplayName(result.user);
     const avatarUrl = getUserAvatarURL(result.user, 256);
-    
+
     res.json({
       success: true,
       user: {
         ...result.user,
         displayName,
-        avatarUrl
+        avatarUrl,
       },
       guilds: result.guilds,
-      connections: result.connections
+      connections: result.connections,
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -89,35 +93,35 @@ app.post('/api/auth/discord', async (req, res) => {
 // Get comprehensive user data with multiple scopes
 const userData = await getEnhancedUserData(accessToken, [
   'identify',
-  'email', 
+  'email',
   'guilds',
-  'connections'
+  'connections',
 ]);
 
-console.log(userData.user.email);         // User email
-console.log(userData.guilds);             // User's Discord servers  
-console.log(userData.connections);        // Connected accounts
+console.log(userData.user.email); // User email
+console.log(userData.guilds); // User's Discord servers
+console.log(userData.connections); // Connected accounts
 ```
 
 ## Utility Functions
 
 ```typescript
-import { 
+import {
   getUserAvatarURL,
   getUserDisplayName,
   getDefaultAvatarURL,
   getGuildIconURL,
   hasPermission,
-  Permissions
+  Permissions,
 } from '@locon213/unicord';
 
 // Avatar utilities
-const avatarUrl = getUserAvatarURL(user, 512);      // Get user avatar
-const displayName = getUserDisplayName(user);        // Get display name
-const defaultAvatar = getDefaultAvatarURL(user);     // Get default avatar
+const avatarUrl = getUserAvatarURL(user, 512); // Get user avatar
+const displayName = getUserDisplayName(user); // Get display name
+const defaultAvatar = getDefaultAvatarURL(user); // Get default avatar
 
-// Guild utilities  
-const guildIcon = getGuildIconURL(guild, 256);       // Get guild icon
+// Guild utilities
+const guildIcon = getGuildIconURL(guild, 256); // Get guild icon
 
 // Permission checking
 const canManageGuild = hasPermission(guild, Permissions.MANAGE_GUILD);
@@ -130,8 +134,8 @@ const isAdmin = hasPermission(guild, Permissions.ADMINISTRATOR);
 // Refresh access token
 const newTokens = await refreshAccessToken(
   clientId,
-  clientSecret, 
-  refreshToken
+  clientSecret,
+  refreshToken,
 );
 
 // Revoke access token
@@ -184,12 +188,15 @@ if (session) {
 ## Security Features
 
 ### PKCE (Proof Key for Code Exchange)
+
 PKCE protects the authorization code exchange by requiring a code verifier and code challenge. The client generates a `code_verifier` and `code_challenge`, and the server validates their correspondence to prevent code interception attacks.
 
 ### State Parameter
+
 The `state` parameter protects against CSRF attacks. UniCord automatically generates and validates state parameters, storing them securely in sessionStorage.
 
 ### Secure Token Storage
+
 Access tokens are stored securely and automatically refreshed when needed. Refresh tokens are handled server-side for maximum security.
 
 ## Error Handling

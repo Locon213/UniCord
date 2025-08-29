@@ -13,7 +13,7 @@ const manager = new ShardManager({
   token: process.env.DISCORD_TOKEN!,
   intents: 513,
   totalShards: 'auto', // Auto-calculate based on guild count
-  shardsPerCluster: 1
+  shardsPerCluster: 1,
 });
 
 // Spawn shards
@@ -37,8 +37,8 @@ const bot = new UniCordBot({
   intents: 513,
   sharding: {
     mode: 'auto', // Automatically determine shard count
-    shardsPerCluster: 1
-  }
+    shardsPerCluster: 1,
+  },
 });
 
 // Bot will automatically shard when needed
@@ -55,14 +55,14 @@ const bot = new UniCordBot({
     mode: 'manual',
     shardCount: 4,
     shardIds: [0, 1], // This process handles shards 0 and 1
-    shardsPerCluster: 2
-  }
+    shardsPerCluster: 2,
+  },
 });
 ```
 
 ## Cross-Process Sharding
 
-*Coming in future versions*: Cross-process sharding with IPC communication and persistent sessions.
+_Coming in future versions_: Cross-process sharding with IPC communication and persistent sessions.
 
 ## Shard Statistics
 
@@ -73,8 +73,10 @@ console.log(`Total shards: ${shardInfo.total}`);
 console.log(`Ready shards: ${shardInfo.ready}`);
 
 // Get individual shard stats
-manager.shards.forEach(shard => {
-  console.log(`Shard ${shard.id}: ${shard.guilds.size} guilds, ${shard.ping}ms ping`);
+manager.shards.forEach((shard) => {
+  console.log(
+    `Shard ${shard.id}: ${shard.guilds.size} guilds, ${shard.ping}ms ping`,
+  );
 });
 ```
 

@@ -14,17 +14,20 @@ Thank you for your interest in contributing to UniCord! This document provides g
 ### Development Setup
 
 1. **Fork the repository**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/UniCord.git
    cd UniCord
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Build the project**
+
    ```bash
    npm run build
    ```
@@ -39,6 +42,7 @@ Thank you for your interest in contributing to UniCord! This document provides g
 ### Branch Naming
 
 Use descriptive branch names following this pattern:
+
 - `feature/command-system` - New features
 - `fix/message-parsing` - Bug fixes
 - `docs/api-reference` - Documentation updates
@@ -47,6 +51,7 @@ Use descriptive branch names following this pattern:
 ### Commit Messages
 
 Follow conventional commit format:
+
 ```
 type(scope): description
 
@@ -123,7 +128,7 @@ describe('UniCordBot', () => {
   beforeEach(() => {
     bot = new UniCordBot({
       token: 'test-token',
-      intents: 513
+      intents: 513,
     });
   });
 
@@ -135,8 +140,10 @@ describe('UniCordBot', () => {
 
     it('should handle command execution', async () => {
       let executed = false;
-      bot.command('test', () => { executed = true; });
-      
+      bot.command('test', () => {
+        executed = true;
+      });
+
       // Test command execution
       expect(executed).toBe(true);
     });
@@ -179,10 +186,10 @@ npm test -- bot.test.ts
 export interface MessageContext {
   /** The original Discord message */
   message: DiscordMessage;
-  
+
   /** The message author */
   author: DiscordUser;
-  
+
   /** Reply to the message
    * @param content - Text or message payload to send
    * @returns Promise resolving to the sent message
@@ -204,25 +211,31 @@ export interface MessageContext {
 
 ```markdown
 ## Bug Description
+
 Brief description of the issue
 
 ## Steps to Reproduce
+
 1. Step one
 2. Step two
 3. Step three
 
 ## Expected Behavior
+
 What should happen
 
 ## Actual Behavior
+
 What actually happens
 
 ## Environment
+
 - OS: Windows 10
 - Node.js: 18.17.0
 - UniCord: 0.1.3
 
 ## Additional Information
+
 Any other relevant details
 ```
 
@@ -239,20 +252,25 @@ Any other relevant details
 
 ```markdown
 ## Problem Statement
+
 Describe the problem this feature would solve
 
 ## Proposed Solution
+
 Explain your proposed solution
 
 ## Use Cases
+
 - Use case 1
 - Use case 2
 - Use case 3
 
 ## Alternatives Considered
+
 What other approaches were considered
 
 ## Additional Context
+
 Any other relevant information
 ```
 
@@ -268,6 +286,7 @@ Any other relevant information
 ### Reporting Security Issues
 
 For security vulnerabilities, please email:
+
 - **Email**: security@unicord.dev
 - **Subject**: [SECURITY] UniCord Vulnerability Report
 

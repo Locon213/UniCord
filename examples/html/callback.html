@@ -1,25 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <title>UniCord Callback</title>
-  <script src="../../dist/index.iife.js"></script>
-</head>
-<body>
-  <div id="status">Loading...</div>
-  <script>
-    const oauth = new UniCord.OAuth2({
-      clientId: '<YOUR_CLIENT_ID>',
-      redirectUri: 'http://localhost:5173/examples/html/callback.html',
-      backendTokenURL: 'http://localhost:3000/api/auth/discord'
-    });
-    oauth.handleCallback()
-      .then(res => {
-        document.getElementById('status').textContent = 'Hello, ' + res.user.username;
-      })
-      .catch(err => {
-        document.getElementById('status').textContent = 'Error: ' + err.message;
+  <head>
+    <meta charset="UTF-8" />
+    <title>UniCord Callback</title>
+    <script src="../../dist/index.iife.js"></script>
+  </head>
+  <body>
+    <div id="status">Loading...</div>
+    <script>
+      const oauth = new UniCord.OAuth2({
+        clientId: '<YOUR_CLIENT_ID>',
+        redirectUri: 'http://localhost:5173/examples/html/callback.html',
+        backendTokenURL: 'http://localhost:3000/api/auth/discord',
       });
-  </script>
-</body>
+      oauth
+        .handleCallback()
+        .then((res) => {
+          document.getElementById('status').textContent =
+            'Hello, ' + res.user.username;
+        })
+        .catch((err) => {
+          document.getElementById('status').textContent =
+            'Error: ' + err.message;
+        });
+    </script>
+  </body>
 </html>

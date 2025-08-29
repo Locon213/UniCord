@@ -9,17 +9,22 @@ import {
   DiscordUser,
   DiscordMember,
   DiscordChannel,
+  DiscordGuild,
   DiscordEmbed,
   DiscordActionRow,
   DiscordComponent,
   DiscordButton,
   DiscordStringSelect,
+  DiscordInteractionDataOption,
+  DiscordAttachment,
+  DiscordEmoji,
+  DiscordReaction,
   MessagePayload,
   FileData,
   ButtonStyle,
   InteractionResponseType,
   DiscordInteractionResponse,
-  DiscordInteractionCallbackData
+  DiscordInteractionCallbackData,
 } from '../types/discord';
 
 export interface BotOptions {
@@ -49,19 +54,26 @@ export interface MessageContext {
   author: DiscordUser;
   member?: DiscordMember;
   channel: DiscordChannel;
-  guild?: any;
+  guild?: DiscordGuild;
   content: string;
   mentions: DiscordUser[];
   mentionedRoles: string[];
-  attachments: any[];
+  attachments: DiscordAttachment[];
   args: string[];
   bot: UniCordBot;
-  reply: (content: string | MessagePayload) => Promise<any>;
-  send: (content: string | MessagePayload) => Promise<any>;
-  react: (emoji: string) => Promise<any>;
-  edit: (messageId: string, content: string | MessagePayload) => Promise<any>;
-  delete: (messageId?: string) => Promise<any>;
-  createButton: (label: string, customId: string, style?: ButtonStyle) => DiscordButton;
+  reply: (content: string | MessagePayload) => Promise<DiscordMessage>;
+  send: (content: string | MessagePayload) => Promise<DiscordMessage>;
+  react: (emoji: string) => Promise<void>;
+  edit: (
+    messageId: string,
+    content: string | MessagePayload,
+  ) => Promise<DiscordMessage>;
+  delete: (messageId?: string) => Promise<void>;
+  createButton: (
+    label: string,
+    customId: string,
+    style?: ButtonStyle,
+  ) => DiscordButton;
   createActionRow: (...components: DiscordComponent[]) => DiscordActionRow;
 }
 
@@ -70,16 +82,24 @@ export interface InteractionContext {
   user: DiscordUser;
   member?: DiscordMember;
   channel: DiscordChannel;
-  guild?: any;
-  options: Map<string, any>;
+  guild?: DiscordGuild;
+  options: Map<string, unknown>;
   bot: UniCordBot;
-  reply: (content: string | MessagePayload) => Promise<any>;
-  editReply: (content: string | MessagePayload) => Promise<any>;
-  deleteReply: () => Promise<any>;
-  followUp: (content: string | MessagePayload) => Promise<any>;
-  defer: (ephemeral?: boolean) => Promise<any>;
-  showModal: (title: string, customId: string, components: DiscordActionRow[]) => Promise<any>;
-  createButton: (label: string, customId: string, style?: ButtonStyle) => DiscordButton;
+  reply: (content: string | MessagePayload) => Promise<DiscordMessage>;
+  editReply: (content: string | MessagePayload) => Promise<DiscordMessage>;
+  deleteReply: () => Promise<void>;
+  followUp: (content: string | MessagePayload) => Promise<DiscordMessage>;
+  defer: (ephemeral?: boolean) => Promise<void>;
+  showModal: (
+    title: string,
+    customId: string,
+    components: DiscordActionRow[],
+  ) => Promise<void>;
+  createButton: (
+    label: string,
+    customId: string,
+    style?: ButtonStyle,
+  ) => DiscordButton;
   createActionRow: (...components: DiscordComponent[]) => DiscordActionRow;
 }
 
@@ -88,15 +108,19 @@ export interface ComponentContext {
   user: DiscordUser;
   member?: DiscordMember;
   channel: DiscordChannel;
-  guild?: any;
+  guild?: DiscordGuild;
   customId: string;
   values?: string[];
   bot: UniCordBot;
-  reply: (content: string | MessagePayload) => Promise<any>;
-  update: (content: string | MessagePayload) => Promise<any>;
-  defer: (ephemeral?: boolean) => Promise<any>;
-  followUp: (content: string | MessagePayload) => Promise<any>;
-  createButton: (label: string, customId: string, style?: ButtonStyle) => DiscordButton;
+  reply: (content: string | MessagePayload) => Promise<DiscordMessage>;
+  update: (content: string | MessagePayload) => Promise<void>;
+  defer: (ephemeral?: boolean) => Promise<void>;
+  followUp: (content: string | MessagePayload) => Promise<DiscordMessage>;
+  createButton: (
+    label: string,
+    customId: string,
+    style?: ButtonStyle,
+  ) => DiscordButton;
   createActionRow: (...components: DiscordComponent[]) => DiscordActionRow;
 }
 
@@ -104,11 +128,19 @@ export class UniCordBot extends EventEmitter {
   private gateway?: Gateway;
   private rest: RestClient;
   private commands = new Map<string, CommandHandler>();
-  private slashCommands = new Map<string, { options: any; handler: CommandHandler }>();
+  private slashCommands = new Map<
+    string,
+    { options: DiscordInteractionDataOption[]; handler: CommandHandler }
+  >();
   private components = new Map<string, ComponentHandler>();
   private mentionHandlers: MentionHandler[] = [];
   private messageHandlers: CommandHandler[] = [];
-  private middlewares: Array<(ctx: MessageContext | InteractionContext | ComponentContext, next: () => Promise<void>) => Promise<void>> = [];
+  private middlewares: Array<
+    (
+      ctx: MessageContext | InteractionContext | ComponentContext,
+      next: () => Promise<void>,
+    ) => Promise<void>
+  > = [];
   public user?: DiscordUser;
   public applicationId?: string;
 
@@ -118,36 +150,45 @@ export class UniCordBot extends EventEmitter {
   }
 
   // Enhanced command registration with aliases and cooldowns
-  command(name: string, handler: CommandHandler, options?: {
-    aliases?: string[];
-    cooldown?: number;
-    description?: string;
-    usage?: string;
-    category?: string;
-    permissions?: string[];
-    guildOnly?: boolean;
-    dmOnly?: boolean;
-  }) {
+  command(
+    name: string,
+    handler: CommandHandler,
+    options?: {
+      aliases?: string[];
+      cooldown?: number;
+      description?: string;
+      usage?: string;
+      category?: string;
+      permissions?: string[];
+      guildOnly?: boolean;
+      dmOnly?: boolean;
+    },
+  ) {
     this.commands.set(name, handler);
-    
+
     // Register aliases
     if (options?.aliases) {
       for (const alias of options.aliases) {
         this.commands.set(alias, handler);
       }
     }
-    
+
     return this;
   }
 
   // Enhanced slash command registration
-  slash(name: string, options: any, handler: CommandHandler, slashOptions?: {
-    cooldown?: number;
-    category?: string;
-    permissions?: string[];
-    guildOnly?: boolean;
-    dmOnly?: boolean;
-  }) {
+  slash(
+    name: string,
+    options: DiscordInteractionDataOption[],
+    handler: CommandHandler,
+    _slashOptions?: {
+      cooldown?: number;
+      category?: string;
+      permissions?: string[];
+      guildOnly?: boolean;
+      dmOnly?: boolean;
+    },
+  ) {
     this.slashCommands.set(name, { options, handler });
     return this;
   }
@@ -179,45 +220,54 @@ export class UniCordBot extends EventEmitter {
     return this;
   }
 
-  middleware(fn: (ctx: MessageContext | InteractionContext | ComponentContext, next: () => Promise<void>) => Promise<void>) {
+  middleware(
+    fn: (
+      ctx: MessageContext | InteractionContext | ComponentContext,
+      next: () => Promise<void>,
+    ) => Promise<void>,
+  ) {
     this.middlewares.push(fn);
     return this;
   }
 
   // Event handling with improved API
-  onEvent(event: string, handler: (data: any) => void | Promise<void>) {
+  onEvent(event: string, handler: (data: unknown) => void | Promise<void>) {
     this.on(event, handler);
     return this;
   }
 
   // Guild events
-  onGuildCreate(handler: (guild: any) => void | Promise<void>) {
+  onGuildCreate(handler: (guild: DiscordGuild) => void | Promise<void>) {
     this.on('GUILD_CREATE', handler);
     return this;
   }
 
-  onGuildDelete(handler: (guild: any) => void | Promise<void>) {
+  onGuildDelete(handler: (guild: DiscordGuild) => void | Promise<void>) {
     this.on('GUILD_DELETE', handler);
     return this;
   }
 
-  onGuildUpdate(handler: (guild: any) => void | Promise<void>) {
+  onGuildUpdate(handler: (guild: DiscordGuild) => void | Promise<void>) {
     this.on('GUILD_UPDATE', handler);
     return this;
   }
 
   // Member events
-  onGuildMemberAdd(handler: (member: any) => void | Promise<void>) {
+  onGuildMemberAdd(handler: (member: DiscordMember) => void | Promise<void>) {
     this.on('GUILD_MEMBER_ADD', handler);
     return this;
   }
 
-  onGuildMemberRemove(handler: (member: any) => void | Promise<void>) {
+  onGuildMemberRemove(
+    handler: (member: DiscordMember) => void | Promise<void>,
+  ) {
     this.on('GUILD_MEMBER_REMOVE', handler);
     return this;
   }
 
-  onGuildMemberUpdate(handler: (member: any) => void | Promise<void>) {
+  onGuildMemberUpdate(
+    handler: (member: DiscordMember) => void | Promise<void>,
+  ) {
     this.on('GUILD_MEMBER_UPDATE', handler);
     return this;
   }
@@ -239,18 +289,20 @@ export class UniCordBot extends EventEmitter {
   }
 
   // Reaction events
-  onReactionAdd(handler: (reaction: any) => void | Promise<void>) {
+  onReactionAdd(handler: (reaction: DiscordReaction) => void | Promise<void>) {
     this.on('MESSAGE_REACTION_ADD', handler);
     return this;
   }
 
-  onReactionRemove(handler: (reaction: any) => void | Promise<void>) {
+  onReactionRemove(
+    handler: (reaction: DiscordReaction) => void | Promise<void>,
+  ) {
     this.on('MESSAGE_REACTION_REMOVE', handler);
     return this;
   }
 
   // Voice events
-  onVoiceStateUpdate(handler: (state: any) => void | Promise<void>) {
+  onVoiceStateUpdate(handler: (state: unknown) => void | Promise<void>) {
     this.on('VOICE_STATE_UPDATE', handler);
     return this;
   }
@@ -260,12 +312,16 @@ export class UniCordBot extends EventEmitter {
     return new EmbedBuilder();
   }
 
-  createButton(label: string, customId: string, style: ButtonStyle = ButtonStyle.Primary): DiscordButton {
+  createButton(
+    label: string,
+    customId: string,
+    style: ButtonStyle = ButtonStyle.Primary,
+  ): DiscordButton {
     return {
       type: 2,
       style,
       label,
-      custom_id: customId
+      custom_id: customId,
     };
   }
 
@@ -274,38 +330,54 @@ export class UniCordBot extends EventEmitter {
       type: 2,
       style: ButtonStyle.Link,
       label,
-      url
+      url,
     };
   }
 
-  createStringSelect(customId: string, options: Array<{ label: string; value: string; description?: string; emoji?: any; default?: boolean }>): DiscordStringSelect {
+  createStringSelect(
+    customId: string,
+    options: Array<{
+      label: string;
+      value: string;
+      description?: string;
+      emoji?: DiscordEmoji;
+      default?: boolean;
+    }>,
+  ): DiscordStringSelect {
     return {
       type: 3,
       custom_id: customId,
-      options
+      options,
     };
   }
 
   createActionRow(...components: DiscordComponent[]): DiscordActionRow {
     return {
       type: 1,
-      components
+      components,
     };
   }
 
   // File handling
-  async uploadFile(channelId: string, file: FileData, content?: string): Promise<any> {
+  async uploadFile(
+    channelId: string,
+    file: FileData,
+    content?: string,
+  ): Promise<DiscordMessage> {
     const formData = new FormData();
-    const payload: any = {};
-    
+    const payload: Record<string, unknown> = {};
+
     if (content) payload.content = content;
-    
+
     formData.append('payload_json', JSON.stringify(payload));
-    const blob = new Blob([file.data instanceof Buffer ? file.data : new Uint8Array(file.data)], { 
-      type: file.contentType || 'application/octet-stream' 
-    });
+    const blob = new Blob(
+      [file.data instanceof Buffer ? file.data : new Uint8Array(file.data)],
+      {
+        type: file.contentType || 'application/octet-stream',
+      },
+    );
     formData.append('files[0]', blob, file.name);
-    
+
     return this.rest.postFormData(`/channels/${channelId}/messages`, formData);
   }
 
@@ -319,11 +391,14 @@ export class UniCordBot extends EventEmitter {
       manager.spawn(this.opts.shardCount);
       manager.shards.forEach((s) => this.bindGateway(s));
     } else {
-      this.gateway = new Gateway({ token: this.opts.token, intents: this.opts.intents });
+      this.gateway = new Gateway({
+        token: this.opts.token,
+        intents: this.opts.intents,
+      });
       this.bindGateway(this.gateway);
       this.gateway.connect();
     }
-    
+
     // Wait for the bot to be ready before syncing commands
     if (this.opts.autoSyncCommands) {
       await new Promise<void>((resolve) => {
@@ -341,7 +416,9 @@ export class UniCordBot extends EventEmitter {
 
   private bindGateway(g: Gateway) {
     g.on('MESSAGE_CREATE', (msg) => this.handleMessage(msg));
-    g.on('INTERACTION_CREATE', (interaction) => this.handleInteraction(interaction));
+    g.on('INTERACTION_CREATE', (interaction) =>
+      this.handleInteraction(interaction),
+    );
     g.on('READY', (d) => {
       this.user = d.user;
       this.applicationId = d.application?.id;
@@ -353,17 +430,30 @@ export class UniCordBot extends EventEmitter {
     g.on('MESSAGE_UPDATE', (msg) => this.emit('messageUpdate', msg));
     g.on('MESSAGE_DELETE', (msg) => this.emit('messageDelete', msg));
     g.on('GUILD_MEMBER_ADD', (member) => this.emit('guildMemberAdd', member));
-    g.on('GUILD_MEMBER_REMOVE', (member) => this.emit('guildMemberRemove', member));
+    g.on('GUILD_MEMBER_REMOVE', (member) =>
+      this.emit('guildMemberRemove', member),
+    );
   }
 
-  private async runMiddlewares(ctx: MessageContext | InteractionContext | ComponentContext, handler: CommandHandler | ComponentHandler) {
+  private async runMiddlewares(
+    ctx: MessageContext | InteractionContext | ComponentContext,
+    handler: CommandHandler | ComponentHandler,
+  ) {
     let idx = -1;
     const dispatch = async (i: number): Promise<void> => {
       if (i <= idx) return;
       idx = i;
       const fn = this.middlewares[i];
       if (fn) await fn(ctx, () => dispatch(i + 1));
-      else await handler(ctx as any);
+      else {
+        if ('customId' in ctx) {
+          // ComponentContext
+          await (handler as ComponentHandler)(ctx);
+        } else {
+          // MessageContext or InteractionContext
+          await (handler as CommandHandler)(ctx);
+        }
+      }
     };
     await dispatch(0);
   }
@@ -371,35 +461,39 @@ export class UniCordBot extends EventEmitter {
   private async handleMessage(msg: DiscordMessage) {
     try {
       const ctx = this.createMessageContext(msg);
-      
+
       // Skip messages from bots (including self)
       if (msg.author.bot) return;
-      
+
       // Handle mentions
-      const botMention = this.user && msg.mentions.some(u => u.id === this.user!.id);
+      const botMention =
+        this.user && msg.mentions.some((u) => u.id === this.user!.id);
       if (botMention && this.mentionHandlers.length > 0) {
         for (const handler of this.mentionHandlers) {
-          await this.runMiddlewares(ctx, handler as any);
+          await handler(ctx);
         }
       }
-      
+
       // Handle all messages if enabled
       if (this.opts.handleAllMessages && this.messageHandlers.length > 0) {
         for (const handler of this.messageHandlers) {
           await this.runMiddlewares(ctx, handler);
         }
       }
-      
+
       // Handle prefix commands with improved parsing
       const prefix = this.opts.prefix;
-      const mentionPrefix = this.opts.mentionPrefix && this.user && msg.content.startsWith(`<@${this.user.id}>`);
-      
+      const mentionPrefix =
+        this.opts.mentionPrefix &&
+        this.user &&
+        msg.content.startsWith(`<@${this.user.id}>`);
+
       if (prefix && msg.content.startsWith(prefix)) {
         const commandContent = msg.content.slice(prefix.length).trim();
         if (commandContent) {
           const args = this.parseCommandArgs(commandContent);
           const commandName = args.shift()?.toLowerCase();
-          
+
           if (commandName) {
             const handler = this.commands.get(commandName);
             if (handler) {
@@ -407,31 +501,40 @@ export class UniCordBot extends EventEmitter {
               await this.runMiddlewares(ctx, handler);
             } else {
               // Command not found - could emit event or send help
-              this.emit('commandNotFound', { message: msg, command: commandName, args });
+              this.emit('commandNotFound', {
+                message: msg,
+                command: commandName,
+                args,
+              });
             }
           }
         }
       } else if (mentionPrefix) {
-        const commandContent = msg.content.replace(`<@${this.user!.id}>`, '').trim();
+        const commandContent = msg.content
+          .replace(`<@${this.user!.id}>`, '')
+          .trim();
         if (commandContent) {
           const args = this.parseCommandArgs(commandContent);
           const commandName = args.shift()?.toLowerCase();
-          
+
           if (commandName) {
             const handler = this.commands.get(commandName);
             if (handler) {
               ctx.args = args;
               await this.runMiddlewares(ctx, handler);
             } else {
-              this.emit('commandNotFound', { message: msg, command: commandName, args });
+              this.emit('commandNotFound', {
+                message: msg,
+                command: commandName,
+                args,
+              });
             }
           }
         }
       }
-      
+
       // Emit message event for other handlers
       this.emit('message', msg);
-      
     } catch (error) {
       logger.error('Error handling message:', error);
       this.emit('error', error);
@@ -444,26 +547,26 @@ export class UniCordBot extends EventEmitter {
     let current = '';
     let inQuotes = false;
     let escapeNext = false;
-    
+
     for (let i = 0; i < content.length; i++) {
       const char = content[i];
-      
+
       if (escapeNext) {
         current += char;
         escapeNext = false;
         continue;
       }
-      
+
       if (char === '\\') {
         escapeNext = true;
         continue;
       }
-      
+
       if (char === '"' && !escapeNext) {
         inQuotes = !inQuotes;
         continue;
       }
-      
+
       if (char === ' ' && !inQuotes) {
         if (current.trim()) {
           args.push(current.trim());
@@ -471,20 +574,21 @@ export class UniCordBot extends EventEmitter {
         }
         continue;
       }
-      
+
       current += char;
     }
-    
+
     if (current.trim()) {
       args.push(current.trim());
     }
-    
+
     return args;
   }
 
   private async handleInteraction(inter: DiscordInteraction) {
     try {
-      if (inter.type === 2) { // Application Command
+      if (inter.type === 2) {
+        // Application Command
         const name = inter.data?.name;
         if (name) {
           const cmd = this.slashCommands.get(name);
@@ -493,7 +597,8 @@ export class UniCordBot extends EventEmitter {
             await this.runMiddlewares(ctx, cmd.handler);
           }
         }
-      } else if (inter.type === 3) { // Message Component
+      } else if (inter.type === 3) {
+        // Message Component
         const customId = inter.data?.custom_id;
         if (customId) {
           const handler = this.components.get(customId);
@@ -514,25 +619,56 @@ export class UniCordBot extends EventEmitter {
       author: msg.author,
       member: msg.member,
       channel: { id: msg.channel_id } as DiscordChannel,
-      guild: msg.guild_id ? { id: msg.guild_id } : undefined,
+      guild: msg.guild_id
+        ? {
+            id: msg.guild_id,
+            name: '',
+            owner_id: '',
+            afk_timeout: 300,
+            verification_level: 0,
+            default_message_notifications: 0,
+            explicit_content_filter: 0,
+            roles: [],
+            emojis: [],
+            features: [],
+            mfa_level: 0,
+            system_channel_flags: 0,
+            premium_tier: 0,
+            nsfw_level: 0,
+            premium_progress_bar_enabled: false,
+            preferred_locale: 'en-US',
+          }
+        : undefined,
       content: msg.content,
       mentions: msg.mentions,
       mentionedRoles: msg.mention_roles,
       attachments: msg.attachments,
       args: [],
       bot: this,
-      reply: (content: string | MessagePayload) => this.sendMessage(msg.channel_id, content, msg.id),
-      send: (content: string | MessagePayload) => this.sendMessage(msg.channel_id, content),
-      react: (emoji: string) => this.rest.put(`/channels/${msg.channel_id}/messages/${msg.id}/reactions/${encodeURIComponent(emoji)}/@me`, {}),
-      edit: (messageId: string, content: string | MessagePayload) => this.editMessage(msg.channel_id, messageId, content),
-      delete: (messageId?: string) => this.rest.delete(`/channels/${msg.channel_id}/messages/${messageId || msg.id}`),
+      reply: (content: string | MessagePayload) =>
+        this.sendMessage(msg.channel_id, content, msg.id),
+      send: (content: string | MessagePayload) =>
+        this.sendMessage(msg.channel_id, content),
+      react: (emoji: string) =>
+        this.rest.put(
+          `/channels/${msg.channel_id}/messages/${msg.id}/reactions/${encodeURIComponent(emoji)}/@me`,
+          {},
+        ),
+      edit: (messageId: string, content: string | MessagePayload) =>
+        this.editMessage(msg.channel_id, messageId, content),
+      delete: (messageId?: string) =>
+        this.rest.delete(
+          `/channels/${msg.channel_id}/messages/${messageId || msg.id}`,
+        ),
       createButton: this.createButton.bind(this),
-      createActionRow: this.createActionRow.bind(this)
+      createActionRow: this.createActionRow.bind(this),
     };
     return ctx;
   }
 
-  private createInteractionContext(inter: DiscordInteraction): InteractionContext {
+  private createInteractionContext(
+    inter: DiscordInteraction,
+  ): InteractionContext {
     const options = new Map();
     if (inter.data?.options) {
       for (const option of inter.data.options) {
@@ -542,20 +678,51 @@ export class UniCordBot extends EventEmitter {
 
     const ctx: InteractionContext = {
       interaction: inter,
-      user: inter.user || (inter.member?.user ?? { id: '', username: '', discriminator: '0000' }),
+      user:
+        inter.user ||
+        (inter.member?.user ?? { id: '', username: '', discriminator: '0000' }),
       member: inter.member,
       channel: { id: inter.channel_id ?? '' } as DiscordChannel,
-      guild: inter.guild_id ? { id: inter.guild_id } : undefined,
+      guild: inter.guild_id
+        ? {
+            id: inter.guild_id,
+            name: '',
+            owner_id: '',
+            afk_timeout: 300,
+            verification_level: 0,
+            default_message_notifications: 0,
+            explicit_content_filter: 0,
+            roles: [],
+            emojis: [],
+            features: [],
+            mfa_level: 0,
+            system_channel_flags: 0,
+            premium_tier: 0,
+            nsfw_level: 0,
+            premium_progress_bar_enabled: false,
+            preferred_locale: 'en-US',
+          }
+        : undefined,
       options,
       bot: this,
-      reply: (content: string | MessagePayload) => this.replyToInteraction(inter, content),
-      editReply: (content: string | MessagePayload) => this.editInteractionResponse(inter, content),
-      deleteReply: () => this.rest.delete(`/webhooks/${inter.application_id}/${inter.token}/messages/@original`),
-      followUp: (content: string | MessagePayload) => this.followUpInteraction(inter, content),
+      reply: (content: string | MessagePayload) =>
+        this.replyToInteraction(inter, content),
+      editReply: (content: string | MessagePayload) =>
+        this.editInteractionResponse(inter, content),
+      deleteReply: () =>
+        this.rest.delete(
+          `/webhooks/${inter.application_id}/${inter.token}/messages/@original`,
+        ),
+      followUp: (content: string | MessagePayload) =>
+        this.followUpInteraction(inter, content),
       defer: (ephemeral = false) => this.deferInteraction(inter, ephemeral),
-      showModal: (title: string, customId: string, components: DiscordActionRow[]) => this.showModal(inter, title, customId, components),
+      showModal: (
+        title: string,
+        customId: string,
+        components: DiscordActionRow[],
+      ) => this.showModal(inter, title, customId, components),
       createButton: this.createButton.bind(this),
-      createActionRow: this.createActionRow.bind(this)
+      createActionRow: this.createActionRow.bind(this),
     };
     return ctx;
   }
@@ -563,25 +730,53 @@ export class UniCordBot extends EventEmitter {
   private createComponentContext(inter: DiscordInteraction): ComponentContext {
     const ctx: ComponentContext = {
       interaction: inter,
-      user: inter.user || (inter.member?.user ?? { id: '', username: '', discriminator: '0000' }),
+      user:
+        inter.user ||
+        (inter.member?.user ?? { id: '', username: '', discriminator: '0000' }),
       member: inter.member,
       channel: { id: inter.channel_id ?? '' } as DiscordChannel,
-      guild: inter.guild_id ? { id: inter.guild_id } : undefined,
+      guild: inter.guild_id
+        ? {
+            id: inter.guild_id,
+            name: '',
+            owner_id: '',
+            afk_timeout: 300,
+            verification_level: 0,
+            default_message_notifications: 0,
+            explicit_content_filter: 0,
+            roles: [],
+            emojis: [],
+            features: [],
+            mfa_level: 0,
+            system_channel_flags: 0,
+            premium_tier: 0,
+            nsfw_level: 0,
+            premium_progress_bar_enabled: false,
+            preferred_locale: 'en-US',
+          }
+        : undefined,
       customId: inter.data?.custom_id ?? '',
       values: inter.data?.values,
       bot: this,
-      reply: (content: string | MessagePayload) => this.replyToInteraction(inter, content),
-      update: (content: string | MessagePayload) => this.updateInteraction(inter, content),
+      reply: (content: string | MessagePayload) =>
+        this.replyToInteraction(inter, content),
+      update: (content: string | MessagePayload) =>
+        this.updateInteraction(inter, content),
       defer: (ephemeral = false) => this.deferInteraction(inter, ephemeral),
-      followUp: (content: string | MessagePayload) => this.followUpInteraction(inter, content),
+      followUp: (content: string | MessagePayload) =>
+        this.followUpInteraction(inter, content),
       createButton: this.createButton.bind(this),
-      createActionRow: this.createActionRow.bind(this)
+      createActionRow: this.createActionRow.bind(this),
     };
     return ctx;
   }
 
   // Utility methods
-  private async sendMessage(channelId: string, content: string | MessagePayload, replyToId?: string) {
+  private async sendMessage(
+    channelId: string,
+    content: string | MessagePayload,
+    replyToId?: string,
+  ) {
     const payload = typeof content === 'string' ? { content } : content;
     if (replyToId) {
       payload.message_reference = { message_id: replyToId };
@@ -589,64 +784,108 @@ export class UniCordBot extends EventEmitter {
     return this.rest.post(`/channels/${channelId}/messages`, payload);
   }
 
-  private async editMessage(channelId: string, messageId: string, content: string | MessagePayload) {
+  private async editMessage(
+    channelId: string,
+    messageId: string,
+    content: string | MessagePayload,
+  ) {
     const payload = typeof content === 'string' ? { content } : content;
-    return this.rest.patch(`/channels/${channelId}/messages/${messageId}`, payload);
+    return this.rest.patch(
+      `/channels/${channelId}/messages/${messageId}`,
+      payload,
+    );
   }
 
-  private async replyToInteraction(inter: DiscordInteraction, content: string | MessagePayload) {
+  private async replyToInteraction(
+    inter: DiscordInteraction,
+    content: string | MessagePayload,
+  ) {
     const data = typeof content === 'string' ? { content } : content;
     const response: DiscordInteractionResponse = {
       type: InteractionResponseType.ChannelMessageWithSource,
-      data
+      data,
     };
-    return this.rest.post(`/interactions/${inter.id}/${inter.token}/callback`, response);
+    return this.rest.post(
+      `/interactions/${inter.id}/${inter.token}/callback`,
+      response,
+    );
   }
 
-  private async updateInteraction(inter: DiscordInteraction, content: string | MessagePayload) {
+  private async updateInteraction(
+    inter: DiscordInteraction,
+    content: string | MessagePayload,
+  ) {
     const data = typeof content === 'string' ? { content } : content;
     const response: DiscordInteractionResponse = {
       type: InteractionResponseType.UpdateMessage,
-      data
+      data,
     };
-    return this.rest.post(`/interactions/${inter.id}/${inter.token}/callback`, response);
+    return this.rest.post(
+      `/interactions/${inter.id}/${inter.token}/callback`,
+      response,
+    );
   }
 
   private async deferInteraction(inter: DiscordInteraction, ephemeral = false) {
     const response: DiscordInteractionResponse = {
       type: InteractionResponseType.DeferredChannelMessageWithSource,
-      data: ephemeral ? { flags: 64 } : undefined
+      data: ephemeral ? { flags: 64 } : undefined,
     };
-    return this.rest.post(`/interactions/${inter.id}/${inter.token}/callback`, response);
+    return this.rest.post(
+      `/interactions/${inter.id}/${inter.token}/callback`,
+      response,
+    );
   }
 
-  private async editInteractionResponse(inter: DiscordInteraction, content: string | MessagePayload) {
+  private async editInteractionResponse(
+    inter: DiscordInteraction,
+    content: string | MessagePayload,
+  ) {
     const data = typeof content === 'string' ? { content } : content;
-    return this.rest.patch(`/webhooks/${inter.application_id}/${inter.token}/messages/@original`, data);
+    return this.rest.patch(
+      `/webhooks/${inter.application_id}/${inter.token}/messages/@original`,
+      data,
+    );
   }
 
-  private async followUpInteraction(inter: DiscordInteraction, content: string | MessagePayload) {
+  private async followUpInteraction(
+    inter: DiscordInteraction,
+    content: string | MessagePayload,
+  ) {
     const data = typeof content === 'string' ? { content } : content;
-    return this.rest.post(`/webhooks/${inter.application_id}/${inter.token}`, data);
+    return this.rest.post(
+      `/webhooks/${inter.application_id}/${inter.token}`,
+      data,
+    );
   }
 
-  private async showModal(inter: DiscordInteraction, title: string, customId: string, components: DiscordActionRow[]) {
+  private async showModal(
+    inter: DiscordInteraction,
+    title: string,
+    customId: string,
+    components: DiscordActionRow[],
+  ) {
     const response: DiscordInteractionResponse = {
       type: InteractionResponseType.Modal,
       data: {
         title,
         custom_id: customId,
-        components
-      } as DiscordInteractionCallbackData
+        components,
+      } as DiscordInteractionCallbackData,
     };
-    return this.rest.post(`/interactions/${inter.id}/${inter.token}/callback`, response);
+    return this.rest.post(
+      `/interactions/${inter.id}/${inter.token}/callback`,
+      response,
+    );
   }
 
   async syncCommands(opts: { scope: 'global' | 'guild'; guildId?: string }) {
-    const commands = Array.from(this.slashCommands.entries()).map(([name, { options }]) => ({
-      name,
-      ...options,
-    }));
+    const commands = Array.from(this.slashCommands.entries()).map(
+      ([name, { options }]) => ({
+        name,
+        ...options,
+      }),
+    );
     if (opts.scope === 'global') {
       await this.rest.bulkOverwriteCommands('global', commands);
     } else {
@@ -674,11 +913,15 @@ export class UniCordBot extends EventEmitter {
     return this.rest.get(`/guilds/${guildId}/roles`);
   }
 
-  async createGuildRole(guildId: string, roleData: any) {
+  async createGuildRole(guildId: string, roleData: Record<string, unknown>) {
     return this.rest.post(`/guilds/${guildId}/roles`, roleData);
   }
 
-  async updateGuildRole(guildId: string, roleId: string, roleData: any) {
+  async updateGuildRole(
+    guildId: string,
+    roleId: string,
+    roleData: Record<string, unknown>,
+  ) {
     return this.rest.patch(`/guilds/${guildId}/roles/${roleId}`, roleData);
   }
 
@@ -687,11 +930,11 @@ export class UniCordBot extends EventEmitter {
   }
 
   // Channel management
-  async createChannel(guildId: string, channelData: any) {
+  async createChannel(guildId: string, channelData: Record<string, unknown>) {
     return this.rest.post(`/guilds/${guildId}/channels`, channelData);
   }
 
-  async updateChannel(channelId: string, channelData: any) {
+  async updateChannel(channelId: string, channelData: Record<string, unknown>) {
     return this.rest.patch(`/channels/${channelId}`, channelData);
   }
 
@@ -704,7 +947,13 @@ export class UniCordBot extends EventEmitter {
     return this.rest.get(`/channels/${channelId}/messages/${messageId}`);
   }
 
-  async getChannelMessages(channelId: string, limit = 50, before?: string, after?: string, around?: string) {
+  async getChannelMessages(
+    channelId: string,
+    limit = 50,
+    before?: string,
+    after?: string,
+    around?: string,
+  ) {
     let url = `/channels/${channelId}/messages?limit=${limit}`;
     if (before) url += `&before=${before}`;
     if (after) url += `&after=${after}`;
@@ -717,7 +966,9 @@ export class UniCordBot extends EventEmitter {
   }
 
   async bulkDeleteMessages(channelId: string, messageIds: string[]) {
-    return this.rest.post(`/channels/${channelId}/messages/bulk-delete`, { messages: messageIds });
+    return this.rest.post(`/channels/${channelId}/messages/bulk-delete`, {
+      messages: messageIds,
+    });
   }
 
   // User management
@@ -729,12 +980,12 @@ export class UniCordBot extends EventEmitter {
     return this.rest.get('/users/@me');
   }
 
-  async updateCurrentUser(userData: any) {
+  async updateCurrentUser(userData: Record<string, unknown>) {
     return this.rest.patch('/users/@me', userData);
   }
 
   // Webhook management
-  async createWebhook(channelId: string, webhookData: any) {
+  async createWebhook(channelId: string, webhookData: Record<string, unknown>) {
     return this.rest.post(`/channels/${channelId}/webhooks`, webhookData);
   }
 
@@ -747,7 +998,7 @@ export class UniCordBot extends EventEmitter {
   }
 
   // Invite management
-  async createInvite(channelId: string, inviteData: any) {
+  async createInvite(channelId: string, inviteData: Record<string, unknown>) {
     return this.rest.post(`/channels/${channelId}/invites`, inviteData);
   }
 
@@ -764,11 +1015,15 @@ export class UniCordBot extends EventEmitter {
     return this.rest.get(`/guilds/${guildId}/emojis`);
   }
 
-  async createGuildEmoji(guildId: string, emojiData: any) {
+  async createGuildEmoji(guildId: string, emojiData: Record<string, unknown>) {
     return this.rest.post(`/guilds/${guildId}/emojis`, emojiData);
   }
 
-  async updateGuildEmoji(guildId: string, emojiId: string, emojiData: any) {
+  async updateGuildEmoji(
+    guildId: string,
+    emojiId: string,
+    emojiData: Record<string, unknown>,
+  ) {
     return this.rest.patch(`/guilds/${guildId}/emojis/${emojiId}`, emojiData);
   }
 

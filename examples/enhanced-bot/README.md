@@ -38,28 +38,33 @@ npm run dev
 ## 🎮 Available Commands
 
 ### Text Commands
+
 - `!ping` / `!p` / `!pingpong` - Check bot latency
 - `!kick @user [reason]` - Kick confirmation (demo)
 
 ### Slash Commands
+
 - `/userinfo [user]` - Get user information
 - `/menu` - Interactive menu with buttons and select
 
 ## 🎛️ Interactive Features
 
 ### Buttons
+
 - **Click Me!** - Primary button example
 - **Danger!** - Danger button example
 - **Link** - External link button
 
 ### Select Menu
+
 - **Option 1** - First choice
-- **Option 2** - Second choice  
+- **Option 2** - Second choice
 - **Option 3** - Third choice
 
 ## 🔍 Event Handling
 
 The bot automatically responds to:
+
 - **Hello/Hi** - Greets users
 - **Help** - Provides help information
 - **Thanks/Thank you** - Responds politely
@@ -69,6 +74,7 @@ The bot automatically responds to:
 ## 🛠️ Middleware
 
 The bot includes middleware for:
+
 - Command execution logging
 - Performance timing
 - Error handling and logging

@@ -1,8 +1,8 @@
-import { 
-  OAuthTokenResponse, 
-  OAuthUserData, 
-  OAuthGuildData, 
-  OAuthConnectionData 
+import {
+  OAuthTokenResponse,
+  OAuthUserData,
+  OAuthGuildData,
+  OAuthConnectionData,
 } from '../types/discord';
 
 export interface ExchangeOptions {
@@ -54,25 +54,31 @@ export async function exchangeCodeForTokenNode(opts: ExchangeOptions): Promise<{
 }
 
 // Enhanced function to get all available user data
-export async function getEnhancedUserData(accessToken: string, scopes?: string[]): Promise<EnhancedUserData> {
+export async function getEnhancedUserData(
+  accessToken: string,
+  scopes?: string[],
+): Promise<EnhancedUserData> {
   const headers = { Authorization: `Bearer ${accessToken}` };
-  
+
   // Get basic user info
   const userRes = await fetch('https://discord.com/api/users/@me', { headers });
   if (!userRes.ok) {
     throw new Error(`Failed to fetch user: ${userRes.statusText}`);
   }
   const user = await userRes.json();
-  
+
   const result: EnhancedUserData = {
     tokens: { access_token: accessToken } as OAuthTokenResponse,
-    user
+    user,
   };
-  
+
   // Get user guilds if guilds scope is available
   if (scopes?.includes('guilds')) {
     try {
-      const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', { headers });
+      const guildsRes = await fetch(
+        'https://discord.com/api/users/@me/guilds',
+        { headers },
+      );
       if (guildsRes.ok) {
         result.guilds = await guildsRes.json();
       }
@@ -80,11 +86,14 @@ export async function getEnhancedUserData(accessToken: string, scopes?: string[]
       console.warn('Failed to fetch guilds:', error);
     }
   }
-  
+
   // Get user connections if connections scope is available
   if (scopes?.includes('connections')) {
     try {
-      const connectionsRes = await fetch('https://discord.com/api/users/@me/connections', { headers });
+      const connectionsRes = await fetch(
+        'https://discord.com/api/users/@me/connections',
+        { headers },
+      );
       if (connectionsRes.ok) {
         result.connections = await connectionsRes.json();
       }
@@ -92,12 +101,15 @@ export async function getEnhancedUserData(accessToken: string, scopes?: string[]
       console.warn('Failed to fetch connections:', error);
     }
   }
-  
+
   return result;
 }
 
 // Get user avatar URL
-export function getUserAvatarURL(user: OAuthUserData, size = 256): string | null {
+export function getUserAvatarURL(
+  user: OAuthUserData,
+  size = 256,
+): string | null {
   if (!user.avatar) return null;
   const extension = user.avatar.startsWith('a_') ? 'gif' : 'png';
   return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${extension}?size=${size}`;
@@ -116,14 +128,20 @@ export function getUserDisplayName(user: OAuthUserData): string {
 }
 
 // Get guild icon URL
-export function getGuildIconURL(guild: OAuthGuildData, size = 256): string | null {
+export function getGuildIconURL(
+  guild: OAuthGuildData,
+  size = 256,
+): string | null {
   if (!guild.icon) return null;
   const extension = guild.icon.startsWith('a_') ? 'gif' : 'png';
   return `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.${extension}?size=${size}`;
 }
 
 // Check if user has specific permissions in a guild
-export function hasPermission(guild: OAuthGuildData, permission: bigint): boolean {
+export function hasPermission(
+  guild: OAuthGuildData,
+  permission: bigint,
+): boolean {
   const permissions = BigInt(guild.permissions);
   // Administrator permission (8) grants all permissions
   if ((permissions & Permissions.ADMINISTRATOR) === Permissions.ADMINISTRATOR) {
@@ -143,45 +161,53 @@ export const Permissions = {
   MANAGE_MESSAGES: 1n << 13n,
   SEND_MESSAGES: 1n << 11n,
   READ_MESSAGE_HISTORY: 1n << 16n,
-  USE_SLASH_COMMANDS: 1n << 31n
+  USE_SLASH_COMMANDS: 1n << 31n,
 } as const;
 
 // Refresh an access token using a refresh token
-export async function refreshAccessToken(clientId: string, clientSecret: string, refreshToken: string): Promise<OAuthTokenResponse> {
+export async function refreshAccessToken(
+  clientId: string,
+  clientSecret: string,
+  refreshToken: string,
+): Promise<OAuthTokenResponse> {
   const body = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
     grant_type: 'refresh_token',
-    refresh_token: refreshToken
+    refresh_token: refreshToken,
   });
-  
+
   const response = await fetch('https://discord.com/api/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body
+    body,
   });
-  
+
   if (!response.ok) {
     throw new Error(`Failed to refresh token: ${response.statusText}`);
   }
-  
+
   return response.json();
 }
 
 // Revoke an access token
-export async function revokeAccessToken(clientId: string, clientSecret: string, accessToken: string): Promise<void> {
+export async function revokeAccessToken(
+  clientId: string,
+  clientSecret: string,
+  accessToken: string,
+): Promise<void> {
   const body = new URLSearchParams({
     client_id: clientId,
     client_secret: clientSecret,
-    token: accessToken
+    token: accessToken,
   });
-  
+
   const response = await fetch('https://discord.com/api/oauth2/token/revoke', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body
+    body,
   });
-  
+
   if (!response.ok) {
     throw new Error(`Failed to revoke token: ${response.statusText}`);
   }

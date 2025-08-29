@@ -1,20 +1,20 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <title>UniCord Login</title>
-  <script src="../../dist/index.iife.js"></script>
-</head>
-<body>
-  <button id="login">Login with Discord</button>
-  <script>
-    const oauth = new UniCord.OAuth2({
-      clientId: '<YOUR_CLIENT_ID>',
-      redirectUri: 'http://localhost:5173/examples/html/callback.html',
-      backendTokenURL: 'http://localhost:3000/api/auth/discord',
-      defaultScopes: ['identify']
-    });
-    document.getElementById('login').onclick = () => oauth.login();
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>UniCord Login</title>
+    <script src="../../dist/index.iife.js"></script>
+  </head>
+  <body>
+    <button id="login">Login with Discord</button>
+    <script>
+      const oauth = new UniCord.OAuth2({
+        clientId: '<YOUR_CLIENT_ID>',
+        redirectUri: 'http://localhost:5173/examples/html/callback.html',
+        backendTokenURL: 'http://localhost:3000/api/auth/discord',
+        defaultScopes: ['identify'],
+      });
+      document.getElementById('login').onclick = () => oauth.login();
+    </script>
+  </body>
 </html>

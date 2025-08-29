@@ -23,18 +23,21 @@ This example demonstrates how to deploy a UniCord bot using Docker with a comple
 ### Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Locon213/UniCord.git
    cd UniCord
    ```
 
 2. **Create environment file**
+
    ```bash
    cp env.example .env
    # Edit .env with your Discord credentials
    ```
 
 3. **Start all services**
+
    ```bash
    npm run docker:compose
    ```
@@ -104,6 +107,7 @@ The bot exposes metrics at `/metrics` endpoint for Prometheus scraping.
 ### SSL Configuration
 
 Nginx is configured with SSL/TLS best practices:
+
 - TLS 1.2 and 1.3 only
 - Strong cipher suites
 - Security headers
@@ -136,6 +140,7 @@ Nginx automatically load balances between bot instances.
 ### Common Issues
 
 #### Bot Won't Start
+
 ```bash
 # Check logs
 docker-compose logs bot
@@ -145,6 +150,7 @@ docker-compose exec bot env | grep DISCORD
 ```
 
 #### Database Issues
+
 ```bash
 # Check PostgreSQL
 docker-compose exec postgres pg_isready -U unicord
@@ -154,6 +160,7 @@ docker-compose logs postgres
 ```
 
 #### Redis Issues
+
 ```bash
 # Test Redis
 docker-compose exec redis redis-cli -a unicord123 ping
@@ -205,6 +212,7 @@ docker-compose exec -T postgres psql -U unicord unicord < backup.sql
 ## 🤝 Support
 
 For Docker-related issues:
+
 - Check [Docker documentation](https://docs.docker.com/)
 - Review [Docker Compose reference](https://docs.docker.com/compose/)
 - Open an issue on [GitHub](https://github.com/Locon213/UniCord/issues)

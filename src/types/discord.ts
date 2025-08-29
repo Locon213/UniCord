@@ -33,12 +33,57 @@ export interface DiscordMember {
   communication_disabled_until?: string;
 }
 
+export interface DiscordGuild {
+  id: string;
+  name: string;
+  icon?: string;
+  icon_hash?: string;
+  splash?: string;
+  discovery_splash?: string;
+  owner?: boolean;
+  owner_id: string;
+  permissions?: string;
+  region?: string;
+  afk_channel_id?: string;
+  afk_timeout: number;
+  widget_enabled?: boolean;
+  widget_channel_id?: string;
+  verification_level: number;
+  default_message_notifications: number;
+  explicit_content_filter: number;
+  roles: Record<string, unknown>[];
+  emojis: Record<string, unknown>[];
+  features: string[];
+  mfa_level: number;
+  application_id?: string;
+  system_channel_id?: string;
+  system_channel_flags: number;
+  rules_channel_id?: string;
+  max_presences?: number;
+  max_members?: number;
+  vanity_url_code?: string;
+  description?: string;
+  banner?: string;
+  premium_tier: number;
+  premium_subscription_count?: number;
+  preferred_locale: string;
+  public_updates_channel_id?: string;
+  max_video_channel_users?: number;
+  max_stage_video_channel_users?: number;
+  approximate_member_count?: number;
+  approximate_presence_count?: number;
+  welcome_screen?: Record<string, unknown>;
+  nsfw_level: number;
+  stickers?: Record<string, unknown>[];
+  premium_progress_bar_enabled: boolean;
+}
+
 export interface DiscordChannel {
   id: string;
   type: number;
   guild_id?: string;
   position?: number;
-  permission_overwrites?: any[];
+  permission_overwrites?: Record<string, unknown>[];
   name?: string;
   topic?: string;
   nsfw?: boolean;
@@ -56,8 +101,8 @@ export interface DiscordChannel {
   video_quality_mode?: number;
   message_count?: number;
   member_count?: number;
-  thread_metadata?: any;
-  member?: any;
+  thread_metadata?: Record<string, unknown>;
+  member?: Record<string, unknown>;
   default_auto_archive_duration?: number;
   permissions?: string;
   flags?: number;
@@ -77,7 +122,7 @@ export interface DiscordMessage {
   mention_everyone: boolean;
   mentions: DiscordUser[];
   mention_roles: string[];
-  mention_channels?: any[];
+  mention_channels?: Record<string, unknown>[];
   attachments: DiscordAttachment[];
   embeds: DiscordEmbed[];
   reactions?: DiscordReaction[];
@@ -85,8 +130,8 @@ export interface DiscordMessage {
   pinned: boolean;
   webhook_id?: string;
   type: number;
-  activity?: any;
-  application?: any;
+  activity?: Record<string, unknown>;
+  application?: Record<string, unknown>;
   application_id?: string;
   message_reference?: DiscordMessageReference;
   flags?: number;
@@ -94,8 +139,8 @@ export interface DiscordMessage {
   interaction?: DiscordInteraction;
   thread?: DiscordChannel;
   components?: DiscordActionRow[];
-  sticker_items?: any[];
-  stickers?: any[];
+  sticker_items?: Record<string, unknown>[];
+  stickers?: Record<string, unknown>[];
   position?: number;
 }
 
@@ -221,7 +266,7 @@ export interface DiscordInteractionData {
   id?: string;
   name?: string;
   type?: number;
-  resolved?: any;
+  resolved?: Record<string, unknown>;
   options?: DiscordInteractionDataOption[];
   custom_id?: string;
   component_type?: number;
@@ -233,9 +278,11 @@ export interface DiscordInteractionData {
 export interface DiscordInteractionDataOption {
   name: string;
   type: number;
-  value?: any;
+  description?: string;
+  value?: unknown;
   options?: DiscordInteractionDataOption[];
   focused?: boolean;
+  required?: boolean;
 }
 
 // Component Types
@@ -244,7 +291,14 @@ export interface DiscordActionRow {
   components: DiscordComponent[];
 }
 
-export type DiscordComponent = DiscordButton | DiscordStringSelect | DiscordTextInput | DiscordUserSelect | DiscordRoleSelect | DiscordMentionableSelect | DiscordChannelSelect;
+export type DiscordComponent =
+  | DiscordButton
+  | DiscordStringSelect
+  | DiscordTextInput
+  | DiscordUserSelect
+  | DiscordRoleSelect
+  | DiscordMentionableSelect
+  | DiscordChannelSelect;
 
 export interface DiscordButton {
   type: 2;
@@ -262,7 +316,7 @@ export interface DiscordStringSelect {
   options: DiscordSelectOption[];
   channel_types?: number[];
   placeholder?: string;
-  default_values?: any[];
+  default_values?: string[];
   min_values?: number;
   max_values?: number;
   disabled?: boolean;
@@ -330,12 +384,12 @@ export enum ButtonStyle {
   Secondary = 2,
   Success = 3,
   Danger = 4,
-  Link = 5
+  Link = 5,
 }
 
 export enum TextInputStyle {
   Short = 1,
-  Paragraph = 2
+  Paragraph = 2,
 }
 
 // Response Types
@@ -368,7 +422,7 @@ export enum InteractionResponseType {
   DeferredUpdateMessage = 6,
   UpdateMessage = 7,
   ApplicationCommandAutocompleteResult = 8,
-  Modal = 9
+  Modal = 9,
 }
 
 // File Upload Types

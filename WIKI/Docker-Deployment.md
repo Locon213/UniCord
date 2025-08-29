@@ -5,6 +5,7 @@ This guide covers deploying UniCord bots and applications using Docker for produ
 ## 🐳 Overview
 
 Our Docker setup provides a complete production environment with:
+
 - **Multi-stage builds** for optimized images
 - **Redis** for caching and session storage
 - **PostgreSQL** for persistent data
@@ -78,7 +79,7 @@ npm run docker:logs
 
 ```yaml
 bot:
-  build: 
+  build:
     context: .
     dockerfile: Dockerfile
     target: production
@@ -97,7 +98,7 @@ bot:
   networks:
     - unicord-network
   healthcheck:
-    test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+    test: ['CMD', 'node', '-e', "console.log('Health check passed')"]
     interval: 30s
     timeout: 10s
     retries: 3
@@ -116,11 +117,11 @@ redis:
     - redis-data:/data
     - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
   ports:
-    - "6379:6379"
+    - '6379:6379'
   networks:
     - unicord-network
   healthcheck:
-    test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+    test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
     interval: 30s
     timeout: 10s
     retries: 3
@@ -141,11 +142,11 @@ postgres:
     - postgres-data:/var/lib/postgresql/data
     - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
   ports:
-    - "5432:5432"
+    - '5432:5432'
   networks:
     - unicord-network
   healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-unicord}"]
+    test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-unicord}']
     interval: 30s
     timeout: 10s
     retries: 3
@@ -161,7 +162,7 @@ monitoring:
   container_name: unicord-prometheus
   restart: unless-stopped
   ports:
-    - "9090:9090"
+    - '9090:9090'
   volumes:
     - ./docker/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
     - prometheus-data:/prometheus
@@ -243,7 +244,7 @@ const bot = new UniCordBot({
   token: process.env.DISCORD_TOKEN!,
   intents: 513,
   shardCount: 3, // Enable sharding
-  prefix: '!'
+  prefix: '!',
 });
 ```
 
@@ -252,6 +253,7 @@ const bot = new UniCordBot({
 ### Common Issues
 
 #### Bot Won't Start
+
 ```bash
 # Check logs
 docker-compose logs bot
@@ -264,6 +266,7 @@ docker-compose restart bot
 ```
 
 #### Database Connection Issues
+
 ```bash
 # Check PostgreSQL status
 docker-compose exec postgres pg_isready -U unicord
@@ -277,6 +280,7 @@ docker-compose up -d
 ```
 
 #### Redis Connection Issues
+
 ```bash
 # Test Redis connection
 docker-compose exec redis redis-cli -a unicord123 ping
@@ -288,6 +292,7 @@ docker-compose logs redis
 ### Performance Issues
 
 #### High Memory Usage
+
 ```bash
 # Check resource usage
 docker stats
@@ -299,6 +304,7 @@ maxmemory-policy allkeys-lru
 ```
 
 #### Slow Response Times
+
 ```bash
 # Check Prometheus metrics
 # Visit http://localhost:9090
@@ -310,6 +316,7 @@ docker-compose exec nginx tail -f /var/log/nginx/access.log
 ## 🔄 Updates and Maintenance
 
 ### Update Bot
+
 ```bash
 # Pull latest changes
 git pull origin main
@@ -321,6 +328,7 @@ docker-compose up -d
 ```
 
 ### Backup Database
+
 ```bash
 # Create backup
 docker-compose exec postgres pg_dump -U unicord unicord > backup.sql
@@ -330,6 +338,7 @@ docker-compose exec -T postgres psql -U unicord unicord < backup.sql
 ```
 
 ### Update Dependencies
+
 ```bash
 # Update base images
 docker-compose pull
@@ -406,6 +415,7 @@ log_duration = on
 ## 📞 Support
 
 For Docker-related issues:
+
 - Check [Docker documentation](https://docs.docker.com/)
 - Review [Docker Compose reference](https://docs.docker.com/compose/)
 - Open an issue on [GitHub](https://github.com/Locon213/UniCord/issues)

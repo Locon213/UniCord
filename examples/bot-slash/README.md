@@ -3,6 +3,7 @@
 Demonstrates auto command sync.
 
 ## Run
+
 ```bash
 cp .env.example .env
 npm install
