@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Plugin architecture
 - WebSocket API for real-time updates
 
+## [0.1.3(1)] - 2025-08-30
+
+### 🐛 Critical Bug Fix
+
+- **Fixed Application ID Issue**: Bots were not starting properly due to missing Application ID in initialization. Added `applicationId` parameter to [BotOptions] to allow manual specification of the Application ID during bot initialization.
+- **Documentation Update**: Updated README and examples to show how to provide the Application ID during bot initialization.
+
+### Changed
+
+- **Bot Initialization**: Users can now provide the Application ID directly in the bot options to prevent startup issues.
+- **Examples**: All bot examples updated to include the Application ID parameter.
+
 ## [0.1.3] - 2025-08-30
 
 ### 🎉 Major Release - Thank you for 135+ weekly downloads!

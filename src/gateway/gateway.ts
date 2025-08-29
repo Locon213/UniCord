@@ -8,6 +8,7 @@ export interface GatewayOptions {
   shardId?: number;
   shardCount?: number;
   url?: string;
+  applicationId?: string;
 }
 
 interface Payload {

@@ -2,7 +2,7 @@
 
 🚀 **Universal Discord SDK & Framework** - Enhanced TypeScript library for Discord bots and OAuth2 integration with modern features and complete API coverage.
 
-[![npm version](https://badge.fury.io/js/@locon213%2Funicord.svg)](https://badge.fury.io/js/@locon213%2Funicord)
+[![npm version](https://badge.fury.io/js/@locon213%2Funicord.svg)](https://badge.fury.io/js/@locon213/unicord)
 [![npm downloads](https://img.shields.io/npm/dm/@locon213/unicord)](https://www.npmjs.com/package/@locon213/unicord)
 [![npm downloads per week](https://img.shields.io/npm/dw/@locon213/unicord)](https://www.npmjs.com/package/@locon213/unicord)
 [![GitHub stars](https://img.shields.io/github/stars/Locon213/UniCord)](https://github.com/Locon213/UniCord)
@@ -15,9 +15,14 @@
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
 [![Discord.js Alternative](https://img.shields.io/badge/Discord.js-Alternative-orange)](https://discord.js.org/)
 
-## 🎉 Version 0.1.3 Released!
+## 🎉 Version 0.1.3(1) Released!
 
 **Thank you for 135+ weekly downloads!** 🎊 This "raw" library is growing fast thanks to our amazing community!
+
+### ✨ What's New in 0.1.3(1)
+
+- 🐛 **Critical Bug Fix** - Fixed issue where bots wouldn't start due to missing Application ID in initialization
+- 📚 **Documentation Update** - Added information about Application ID requirement for bot initialization
 
 ### ✨ What's New in 0.1.3
 
@@ -60,6 +65,7 @@ const bot = new UniCordBot({
   prefix: '!',
   mentionPrefix: true,
   handleAllMessages: true,
+  applicationId: process.env.DISCORD_CLIENT_ID, // Optional but recommended to prevent startup issues
 });
 
 // Text command with enhanced options
@@ -120,7 +126,7 @@ import { OAuth2, exchangeCodeForTokenNode } from '@locon213/unicord';
 
 // Browser OAuth2
 const oauth = new OAuth2({
-  clientId: 'your-client-id',
+  clientId: 'your-client-id', // This is your Discord Application ID
   redirectUri: 'http://localhost:3000/callback',
   backendTokenURL: '/api/auth/discord',
 });
@@ -131,7 +137,7 @@ await oauth.loginFullProfile(); // User, email, guilds, connections
 
 // Server-side token exchange
 const result = await exchangeCodeForTokenNode({
-  clientId: process.env.DISCORD_CLIENT_ID!,
+  clientId: process.env.DISCORD_CLIENT_ID!, // Your Discord Application ID
   clientSecret: process.env.DISCORD_CLIENT_SECRET!,
   code: authCode,
   redirectUri: redirectUri,
@@ -167,7 +173,7 @@ Create a `.env` file:
 
 ```env
 DISCORD_TOKEN=your_bot_token
-DISCORD_CLIENT_ID=your_client_id
+DISCORD_CLIENT_ID=your_client_id  # Your Discord Application ID
 DISCORD_CLIENT_SECRET=your_client_secret
 REDIS_PASSWORD=unicord123
 POSTGRES_USER=unicord

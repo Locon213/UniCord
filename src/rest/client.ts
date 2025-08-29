@@ -3,6 +3,7 @@ import { RateLimitManager } from '../utils/rateLimit';
 export interface RestClientOptions {
   token?: string;
   baseUrl?: string;
+  applicationId?: string;
 }
 
 export class RestClient {
@@ -14,6 +15,10 @@ export class RestClient {
   constructor(opts: RestClientOptions = {}) {
     this.token = opts.token;
     this.baseUrl = opts.baseUrl || 'https://discord.com/api/v10';
+    
+    if (opts.applicationId) {
+      this.applicationId = opts.applicationId;
+    }
   }
 
   setToken(token: string) {

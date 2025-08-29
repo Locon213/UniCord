@@ -1,4 +1,4 @@
-import { UniCordBot } from '../../src/index';
+import { UniCordBot } from '@locon213/unicord';
 
 // Enhanced bot with new features
 const bot = new UniCordBot({
@@ -8,6 +8,7 @@ const bot = new UniCordBot({
   mentionPrefix: true,
   handleAllMessages: true,
   autoSyncCommands: true,
+  applicationId: process.env.DISCORD_CLIENT_ID, // Added applicationId
 });
 
 // Enhanced command with options

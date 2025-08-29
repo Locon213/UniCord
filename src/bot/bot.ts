@@ -35,6 +35,7 @@ export interface BotOptions {
   autoSyncCommands?: boolean;
   mentionPrefix?: boolean;
   handleAllMessages?: boolean;
+  applicationId?: string;
 }
 
 interface CommandHandler {
@@ -146,7 +147,12 @@ export class UniCordBot extends EventEmitter {
 
   constructor(private opts: BotOptions) {
     super();
-    this.rest = new RestClient({ token: opts.token });
+    this.rest = new RestClient({ token: opts.token, applicationId: opts.applicationId });
+    
+    // Set applicationId if provided in options
+    if (opts.applicationId) {
+      this.applicationId = opts.applicationId;
+    }
   }
 
   // Enhanced command registration with aliases and cooldowns
