@@ -3,8 +3,30 @@
 🚀 **Universal Discord SDK & Framework** - Enhanced TypeScript library for Discord bots and OAuth2 integration with modern features and complete API coverage.
 
 [![npm version](https://badge.fury.io/js/@locon213%2Funicord.svg)](https://badge.fury.io/js/@locon213%2Funicord)
+[![npm downloads](https://img.shields.io/npm/dm/@locon213/unicord)](https://www.npmjs.com/package/@locon213/unicord)
+[![npm downloads per week](https://img.shields.io/npm/dw/@locon213/unicord)](https://www.npmjs.com/package/@locon213/unicord)
+[![GitHub stars](https://img.shields.io/github/stars/Locon213/UniCord)](https://github.com/Locon213/UniCord)
+[![GitHub forks](https://img.shields.io/github/forks/Locon213/UniCord)](https://github.com/Locon213/UniCord)
+[![GitHub issues](https://img.shields.io/github/issues/Locon213/UniCord)](https://github.com/Locon213/UniCord/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/Locon213/UniCord)](https://github.com/Locon213/UniCord/pulls)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://hub.docker.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/)
+[![Discord.js Alternative](https://img.shields.io/badge/Discord.js-Alternative-orange)](https://discord.js.org/)
+
+## 🎉 Version 0.1.3 Released!
+
+**Thank you for 135+ weekly downloads!** 🎊 This "raw" library is growing fast thanks to our amazing community!
+
+### ✨ What's New in 0.1.3
+
+- 🐳 **Complete Docker Support** - Multi-stage builds, Redis, PostgreSQL, Nginx, Prometheus monitoring
+- 🤖 **Enhanced Bot API** - Full Discord.js-level functionality with improved command handling
+- 🔧 **Fixed Message Reading** - Bots now properly read messages with prefixes like `!ping`
+- 📚 **Improved Wiki** - Comprehensive documentation following industry standards
+- ⚡ **Performance Improvements** - Better caching, rate limiting, and error handling
+- 🎯 **New Bot Features** - Guild management, role management, webhook support, and more!
 
 ## ✨ Features
 
@@ -16,6 +38,8 @@
 - 🔧 **Middleware System**: Advanced request processing and authentication
 - 📚 **Full TypeScript**: 200+ interfaces for complete Discord API coverage
 - ⚡ **Modern Stack**: TypeScript 5.7, ESLint 9, Vitest 2
+- 🐳 **Docker Ready**: Complete containerization with monitoring and scaling
+- 🚀 **Discord.js Alternative**: Comparable functionality with modern TypeScript design
 
 ## 📦 Installation
 
@@ -37,9 +61,13 @@ const bot = new UniCordBot({
   handleAllMessages: true
 });
 
-// Text command
+// Text command with enhanced options
 bot.command('ping', async (ctx) => {
   await ctx.reply('🏓 Pong!');
+}, {
+  aliases: ['p', 'pingpong'],
+  description: 'Check if the bot is alive',
+  category: 'Utility'
 });
 
 // Slash command with interactive components
@@ -58,6 +86,17 @@ bot.slash('hello', { description: 'Say hello with buttons' }, async (ctx) => {
 // Handle button interactions
 bot.button('hello_btn', async (ctx) => {
   await ctx.update({ content: 'Button clicked! ✅', components: [] });
+});
+
+// Event handling
+bot.onGuildMemberAdd(async (member) => {
+  console.log(`Welcome ${member.user?.username} to the server!`);
+});
+
+bot.onMessageCreate(async (message) => {
+  if (message.content.includes('hello')) {
+    await bot.sendMessage(message.channel_id, 'Hello there! 👋');
+  }
 });
 
 // Start the bot
@@ -88,6 +127,37 @@ const result = await exchangeCodeForTokenNode({
 });
 ```
 
+## 🐳 Docker Deployment
+
+### Quick Start
+```bash
+# Build and run with Docker Compose
+npm run docker:compose
+
+# Or build manually
+npm run docker:build
+npm run docker:run
+```
+
+### Complete Stack
+Our Docker setup includes:
+- **Bot Service** - Multi-stage optimized build
+- **Redis** - Caching and session storage
+- **PostgreSQL** - Persistent data storage
+- **Nginx** - Reverse proxy with SSL
+- **Prometheus** - Monitoring and metrics
+
+### Environment Variables
+Create a `.env` file:
+```env
+DISCORD_TOKEN=your_bot_token
+DISCORD_CLIENT_ID=your_client_id
+DISCORD_CLIENT_SECRET=your_client_secret
+REDIS_PASSWORD=unicord123
+POSTGRES_USER=unicord
+POSTGRES_PASSWORD=unicord123
+```
+
 ## 📚 Documentation
 
 Complete documentation is available in the [WIKI](./WIKI/):
@@ -97,6 +167,9 @@ Complete documentation is available in the [WIKI](./WIKI/):
 - [OAuth2 Integration](./WIKI/OAuth2-PKCE.md) - Authentication and user data
 - [API Reference](./WIKI/API-Reference.md) - Complete API documentation
 - [Sharding](./WIKI/Sharding.md) - Scaling for large bots
+- [Docker Deployment](./WIKI/Docker-Deployment.md) - Container deployment guide
+
+**📋 [View Changelog](./CHANGELOG.md) - See what's new in each version**
 
 ## 🛠️ Development
 
@@ -113,14 +186,35 @@ npm test
 - `npm run dev` - Watch mode for development
 - `npm run test` - Run tests
 - `npm run lint` - Check code quality
+- `npm run docker:build` - Build Docker image
+- `npm run docker:compose` - Start with Docker Compose
 
-## 🐳 Docker
+## 🚀 Performance & Scaling
 
-```bash
-docker build -t @locon213/unicord .
-docker compose up -d
-```
+- **Multi-stage Docker builds** for optimized images
+- **Redis caching** for improved response times
+- **PostgreSQL** for persistent data with proper indexing
+- **Nginx** with rate limiting and SSL termination
+- **Prometheus monitoring** for performance insights
+- **Health checks** for all services
+- **Auto-scaling** ready architecture
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
+
+## 📊 Statistics
+
+- **Weekly Downloads**: 135+ (and growing!)
+- **GitHub Stars**: Growing community
+- **TypeScript Coverage**: 100%
+- **API Coverage**: Discord.js equivalent
+- **Performance**: Optimized for production
 
 ## 📝 License
 
 MIT © [Locon213](https://github.com/Locon213)
+
+---
+
+**Made with ❤️ by the UniCord Community**

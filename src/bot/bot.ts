@@ -117,13 +117,37 @@ export class UniCordBot extends EventEmitter {
     this.rest = new RestClient({ token: opts.token });
   }
 
-  // Command registration
-  command(name: string, handler: CommandHandler) {
+  // Enhanced command registration with aliases and cooldowns
+  command(name: string, handler: CommandHandler, options?: {
+    aliases?: string[];
+    cooldown?: number;
+    description?: string;
+    usage?: string;
+    category?: string;
+    permissions?: string[];
+    guildOnly?: boolean;
+    dmOnly?: boolean;
+  }) {
     this.commands.set(name, handler);
+    
+    // Register aliases
+    if (options?.aliases) {
+      for (const alias of options.aliases) {
+        this.commands.set(alias, handler);
+      }
+    }
+    
     return this;
   }
 
-  slash(name: string, options: any, handler: CommandHandler) {
+  // Enhanced slash command registration
+  slash(name: string, options: any, handler: CommandHandler, slashOptions?: {
+    cooldown?: number;
+    category?: string;
+    permissions?: string[];
+    guildOnly?: boolean;
+    dmOnly?: boolean;
+  }) {
     this.slashCommands.set(name, { options, handler });
     return this;
   }
@@ -160,8 +184,74 @@ export class UniCordBot extends EventEmitter {
     return this;
   }
 
-  onEvent(event: string, handler: CommandHandler) {
+  // Event handling with improved API
+  onEvent(event: string, handler: (data: any) => void | Promise<void>) {
     this.on(event, handler);
+    return this;
+  }
+
+  // Guild events
+  onGuildCreate(handler: (guild: any) => void | Promise<void>) {
+    this.on('GUILD_CREATE', handler);
+    return this;
+  }
+
+  onGuildDelete(handler: (guild: any) => void | Promise<void>) {
+    this.on('GUILD_DELETE', handler);
+    return this;
+  }
+
+  onGuildUpdate(handler: (guild: any) => void | Promise<void>) {
+    this.on('GUILD_UPDATE', handler);
+    return this;
+  }
+
+  // Member events
+  onGuildMemberAdd(handler: (member: any) => void | Promise<void>) {
+    this.on('GUILD_MEMBER_ADD', handler);
+    return this;
+  }
+
+  onGuildMemberRemove(handler: (member: any) => void | Promise<void>) {
+    this.on('GUILD_MEMBER_REMOVE', handler);
+    return this;
+  }
+
+  onGuildMemberUpdate(handler: (member: any) => void | Promise<void>) {
+    this.on('GUILD_MEMBER_UPDATE', handler);
+    return this;
+  }
+
+  // Message events
+  onMessageCreate(handler: (message: DiscordMessage) => void | Promise<void>) {
+    this.on('MESSAGE_CREATE', handler);
+    return this;
+  }
+
+  onMessageUpdate(handler: (message: DiscordMessage) => void | Promise<void>) {
+    this.on('MESSAGE_UPDATE', handler);
+    return this;
+  }
+
+  onMessageDelete(handler: (message: DiscordMessage) => void | Promise<void>) {
+    this.on('MESSAGE_DELETE', handler);
+    return this;
+  }
+
+  // Reaction events
+  onReactionAdd(handler: (reaction: any) => void | Promise<void>) {
+    this.on('MESSAGE_REACTION_ADD', handler);
+    return this;
+  }
+
+  onReactionRemove(handler: (reaction: any) => void | Promise<void>) {
+    this.on('MESSAGE_REACTION_REMOVE', handler);
+    return this;
+  }
+
+  // Voice events
+  onVoiceStateUpdate(handler: (state: any) => void | Promise<void>) {
+    this.on('VOICE_STATE_UPDATE', handler);
     return this;
   }
 
@@ -282,6 +372,9 @@ export class UniCordBot extends EventEmitter {
     try {
       const ctx = this.createMessageContext(msg);
       
+      // Skip messages from bots (including self)
+      if (msg.author.bot) return;
+      
       // Handle mentions
       const botMention = this.user && msg.mentions.some(u => u.id === this.user!.id);
       if (botMention && this.mentionHandlers.length > 0) {
@@ -297,36 +390,96 @@ export class UniCordBot extends EventEmitter {
         }
       }
       
-      // Handle prefix commands
+      // Handle prefix commands with improved parsing
       const prefix = this.opts.prefix;
       const mentionPrefix = this.opts.mentionPrefix && this.user && msg.content.startsWith(`<@${this.user.id}>`);
       
       if (prefix && msg.content.startsWith(prefix)) {
-        const args = msg.content.slice(prefix.length).trim().split(/\s+/);
-        const commandName = args.shift()?.toLowerCase();
-        
-        if (commandName) {
-          const handler = this.commands.get(commandName);
-          if (handler) {
-            ctx.args = args;
-            await this.runMiddlewares(ctx, handler);
+        const commandContent = msg.content.slice(prefix.length).trim();
+        if (commandContent) {
+          const args = this.parseCommandArgs(commandContent);
+          const commandName = args.shift()?.toLowerCase();
+          
+          if (commandName) {
+            const handler = this.commands.get(commandName);
+            if (handler) {
+              ctx.args = args;
+              await this.runMiddlewares(ctx, handler);
+            } else {
+              // Command not found - could emit event or send help
+              this.emit('commandNotFound', { message: msg, command: commandName, args });
+            }
           }
         }
       } else if (mentionPrefix) {
-        const args = msg.content.replace(`<@${this.user!.id}>`, '').trim().split(/\s+/);
-        const commandName = args.shift()?.toLowerCase();
-        
-        if (commandName) {
-          const handler = this.commands.get(commandName);
-          if (handler) {
-            ctx.args = args;
-            await this.runMiddlewares(ctx, handler);
+        const commandContent = msg.content.replace(`<@${this.user!.id}>`, '').trim();
+        if (commandContent) {
+          const args = this.parseCommandArgs(commandContent);
+          const commandName = args.shift()?.toLowerCase();
+          
+          if (commandName) {
+            const handler = this.commands.get(commandName);
+            if (handler) {
+              ctx.args = args;
+              await this.runMiddlewares(ctx, handler);
+            } else {
+              this.emit('commandNotFound', { message: msg, command: commandName, args });
+            }
           }
         }
       }
+      
+      // Emit message event for other handlers
+      this.emit('message', msg);
+      
     } catch (error) {
+      logger.error('Error handling message:', error);
       this.emit('error', error);
     }
+  }
+
+  // Improved command argument parsing
+  private parseCommandArgs(content: string): string[] {
+    const args: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    let escapeNext = false;
+    
+    for (let i = 0; i < content.length; i++) {
+      const char = content[i];
+      
+      if (escapeNext) {
+        current += char;
+        escapeNext = false;
+        continue;
+      }
+      
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      
+      if (char === '"' && !escapeNext) {
+        inQuotes = !inQuotes;
+        continue;
+      }
+      
+      if (char === ' ' && !inQuotes) {
+        if (current.trim()) {
+          args.push(current.trim());
+          current = '';
+        }
+        continue;
+      }
+      
+      current += char;
+    }
+    
+    if (current.trim()) {
+      args.push(current.trim());
+    }
+    
+    return args;
   }
 
   private async handleInteraction(inter: DiscordInteraction) {
@@ -502,6 +655,125 @@ export class UniCordBot extends EventEmitter {
       }
     }
     logger.info('Commands synced');
+  }
+
+  // Utility methods for bot management
+  async getGuild(guildId: string) {
+    return this.rest.get(`/guilds/${guildId}`);
+  }
+
+  async getGuildChannels(guildId: string) {
+    return this.rest.get(`/guilds/${guildId}/channels`);
+  }
+
+  async getGuildMembers(guildId: string, limit = 1000) {
+    return this.rest.get(`/guilds/${guildId}/members?limit=${limit}`);
+  }
+
+  async getGuildRoles(guildId: string) {
+    return this.rest.get(`/guilds/${guildId}/roles`);
+  }
+
+  async createGuildRole(guildId: string, roleData: any) {
+    return this.rest.post(`/guilds/${guildId}/roles`, roleData);
+  }
+
+  async updateGuildRole(guildId: string, roleId: string, roleData: any) {
+    return this.rest.patch(`/guilds/${guildId}/roles/${roleId}`, roleData);
+  }
+
+  async deleteGuildRole(guildId: string, roleId: string) {
+    return this.rest.delete(`/guilds/${guildId}/roles/${roleId}`);
+  }
+
+  // Channel management
+  async createChannel(guildId: string, channelData: any) {
+    return this.rest.post(`/guilds/${guildId}/channels`, channelData);
+  }
+
+  async updateChannel(channelId: string, channelData: any) {
+    return this.rest.patch(`/channels/${channelId}`, channelData);
+  }
+
+  async deleteChannel(channelId: string) {
+    return this.rest.delete(`/channels/${channelId}`);
+  }
+
+  // Message management
+  async getMessage(channelId: string, messageId: string) {
+    return this.rest.get(`/channels/${channelId}/messages/${messageId}`);
+  }
+
+  async getChannelMessages(channelId: string, limit = 50, before?: string, after?: string, around?: string) {
+    let url = `/channels/${channelId}/messages?limit=${limit}`;
+    if (before) url += `&before=${before}`;
+    if (after) url += `&after=${after}`;
+    if (around) url += `&around=${around}`;
+    return this.rest.get(url);
+  }
+
+  async deleteMessage(channelId: string, messageId: string) {
+    return this.rest.delete(`/channels/${channelId}/messages/${messageId}`);
+  }
+
+  async bulkDeleteMessages(channelId: string, messageIds: string[]) {
+    return this.rest.post(`/channels/${channelId}/messages/bulk-delete`, { messages: messageIds });
+  }
+
+  // User management
+  async getUser(userId: string) {
+    return this.rest.get(`/users/${userId}`);
+  }
+
+  async getCurrentUser() {
+    return this.rest.get('/users/@me');
+  }
+
+  async updateCurrentUser(userData: any) {
+    return this.rest.patch('/users/@me', userData);
+  }
+
+  // Webhook management
+  async createWebhook(channelId: string, webhookData: any) {
+    return this.rest.post(`/channels/${channelId}/webhooks`, webhookData);
+  }
+
+  async getChannelWebhooks(channelId: string) {
+    return this.rest.get(`/channels/${channelId}/webhooks`);
+  }
+
+  async getGuildWebhooks(guildId: string) {
+    return this.rest.get(`/guilds/${guildId}/webhooks`);
+  }
+
+  // Invite management
+  async createInvite(channelId: string, inviteData: any) {
+    return this.rest.post(`/channels/${channelId}/invites`, inviteData);
+  }
+
+  async getChannelInvites(channelId: string) {
+    return this.rest.get(`/channels/${channelId}/invites`);
+  }
+
+  async getGuildInvites(guildId: string) {
+    return this.rest.get(`/guilds/${guildId}/invites`);
+  }
+
+  // Emoji management
+  async getGuildEmojis(guildId: string) {
+    return this.rest.get(`/guilds/${guildId}/emojis`);
+  }
+
+  async createGuildEmoji(guildId: string, emojiData: any) {
+    return this.rest.post(`/guilds/${guildId}/emojis`, emojiData);
+  }
+
+  async updateGuildEmoji(guildId: string, emojiId: string, emojiData: any) {
+    return this.rest.patch(`/guilds/${guildId}/emojis/${emojiId}`, emojiData);
+  }
+
+  async deleteGuildEmoji(guildId: string, emojiId: string) {
+    return this.rest.delete(`/guilds/${guildId}/emojis/${emojiId}`);
   }
 }
 

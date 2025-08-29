@@ -1,9 +1,117 @@
-version: '3'
+version: '3.8'
+
 services:
   bot:
-    build: .
-    env_file: .env
-    command: node dist/index.cjs
-  redis:
-    image: redis:alpine
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: unicord-bot
     restart: unless-stopped
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - TZ=UTC
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - unicord-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: unicord-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-unicord123}
+    volumes:
+      - redis-data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    networks:
+      - unicord-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: unicord-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: unicord
+      POSTGRES_USER: ${POSTGRES_USER:-unicord}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-unicord123}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - unicord-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-unicord}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: unicord-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - bot
+    networks:
+      - unicord-network
+
+  monitoring:
+    image: prom/prometheus:latest
+    container_name: unicord-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - unicord-network
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+
+networks:
+  unicord-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

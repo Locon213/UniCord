@@ -1,16 +1,6 @@
-import { 
-  UniCordBot, 
-  ButtonStyle, 
-  DiscordScopes, 
-  OAuth2,
-  EmbedBuilder,
-  exchangeCodeForTokenNode,
-  getUserDisplayName,
-  hasPermission,
-  Permissions 
-} from '../../src/index';
+import { UniCordBot } from '../../src/index';
 
-// Enhanced Discord Bot Example
+// Enhanced bot with new features
 const bot = new UniCordBot({
   token: process.env.DISCORD_TOKEN!,
   intents: 513, // GUILDS + GUILD_MESSAGES
@@ -20,200 +10,198 @@ const bot = new UniCordBot({
   autoSyncCommands: true
 });
 
+// Enhanced command with options
+bot.command('ping', async (ctx) => {
+  const start = Date.now();
+  const msg = await ctx.reply('🏓 Pong!');
+  const end = Date.now();
+  
+  if ('edit' in ctx) {
+    await ctx.edit(msg.id, `🏓 Pong! Latency: ${end - start}ms`);
+  }
+}, {
+  aliases: ['p', 'pingpong'],
+  description: 'Check bot latency',
+  category: 'Utility'
+});
+
+// Command with arguments and mentions
+bot.command('kick', async (ctx) => {
+  if ('mentions' in ctx && 'args' in ctx) {
+    const user = ctx.mentions[0];
+    const reason = ctx.args.join(' ') || 'No reason provided';
+    
+    if (!user) {
+      await ctx.reply('❌ Please mention a user to kick!');
+      return;
+    }
+    
+    if (user.id === ctx.author.id) {
+      await ctx.reply('❌ You cannot kick yourself!');
+      return;
+    }
+    
+    // Create confirmation embed
+    const embed = bot.createEmbed()
+      .setTitle('🦵 Kick Confirmation')
+      .setDescription(`Are you sure you want to kick **${user.username}**?`)
+      .addField('Reason', reason)
+      .setColor(0xff9900)
+      .setTimestamp();
+    
+    await ctx.reply({ embeds: [embed.toJSON()] });
+  }
+}, {
+  aliases: ['boot', 'remove'],
+  description: 'Kick a user from the server',
+  category: 'Moderation'
+});
+
+// Enhanced slash command
+bot.slash('userinfo', {
+  description: 'Get information about a user',
+  type: 1,
+  options: [
+    {
+      name: 'user',
+      description: 'The user to get info about',
+      type: 6, // USER type
+      required: false
+    }
+  ]
+}, async (ctx) => {
+  const targetUser = 'user' in ctx ? ctx.user : ctx.author;
+  const member = 'member' in ctx ? ctx.member : undefined;
+  
+  const embed = bot.createEmbed()
+    .setTitle(`${targetUser.username}'s Information`)
+    .addField('User ID', targetUser.id, true)
+    .addField('Username', targetUser.username, true)
+    .addField('Discriminator', targetUser.discriminator || 'N/A', true);
+  
+  if (member) {
+    embed.addField('Joined Server', new Date(member.joined_at!).toLocaleDateString(), true);
+    embed.addField('Nickname', member.nick || 'None', true);
+    embed.addField('Roles', member.roles?.length ? member.roles.length.toString() : '0', true);
+  }
+  
+  embed.setColor(0x00ff00)
+    .setTimestamp();
+  
+  await ctx.reply({ embeds: [embed.toJSON()] });
+});
+
+// Interactive menu command
+bot.slash('menu', {
+  description: 'Show interactive menu with buttons and select',
+  type: 1
+}, async (ctx) => {
+  const button1 = bot.createButton('Click Me!', 'btn_1', 1); // Primary
+  const button2 = bot.createButton('Danger!', 'btn_2', 4);   // Danger
+  const button3 = bot.createLinkButton('Link', 'https://github.com/Locon213/UniCord');
+  
+  const select = bot.createStringSelect('choice', [
+    { label: 'Option 1', value: 'opt1', description: 'First option' },
+    { label: 'Option 2', value: 'opt2', description: 'Second option' },
+    { label: 'Option 3', value: 'opt3', description: 'Third option' }
+  ]);
+  
+  const buttonRow = bot.createActionRow(button1, button2, button3);
+  const selectRow = bot.createActionRow(select);
+  
+  await ctx.reply({
+    content: '🎛️ **Interactive Menu**\nChoose an option below:',
+    components: [buttonRow, selectRow]
+  });
+});
+
+// Button handlers
+bot.button('btn_1', async (ctx) => {
+  await ctx.update({ 
+    content: '✅ Button 1 clicked! You chose the primary option.',
+    components: [] 
+  });
+});
+
+bot.button('btn_2', async (ctx) => {
+  await ctx.update({ 
+    content: '⚠️ Button 2 clicked! This was the danger option.',
+    components: [] 
+  });
+});
+
+// Select menu handler
+bot.selectMenu('choice', async (ctx) => {
+  const selected = ctx.values?.[0];
+  const options = {
+    'opt1': 'First option - Great choice! 🎉',
+    'opt2': 'Second option - Nice pick! 👍',
+    'opt3': 'Third option - Excellent! 🌟'
+  };
+  
+  await ctx.update({ 
+    content: `🎯 You selected: **${options[selected as keyof typeof options] || 'Unknown option'}**`,
+    components: [] 
+  });
+});
+
+// Event handlers
+bot.onGuildMemberAdd(async (member) => {
+  console.log(`🎉 Welcome ${member.user?.username} to the server!`);
+});
+
+// Use onMessage event instead of onMessageCreate for better compatibility
+bot.onMessage(async (ctx) => {
+  if ('content' in ctx) {
+    const content = ctx.content.toLowerCase();
+    
+    if (content.includes('hello') || content.includes('hi')) {
+      await ctx.reply('👋 Hello there! How can I help you?');
+    }
+    
+    if (content.includes('help')) {
+      await ctx.reply('📚 Need help? Use `!help` or `/help` for commands!');
+    }
+    
+    if (content.includes('thanks') || content.includes('thank you')) {
+      await ctx.reply('😊 You\'re welcome!');
+    }
+  }
+});
+
+bot.onGuildCreate(async (guild) => {
+  console.log(`🎉 Bot joined new guild: ${guild.name} (${guild.id})`);
+});
+
+// Error handling
+bot.on('error', (error) => {
+  console.error('Bot error:', error);
+});
+
+bot.on('commandNotFound', ({ message, command }) => {
+  console.log(`Command not found: ${command} in ${message.guild_id}`);
+});
+
 // Middleware for logging
 bot.middleware(async (ctx, next) => {
-  console.log(`Command executed by ${ctx.user?.username || ctx.author?.username}`);
-  await next();
-});
-
-// Basic ping command with interactive components
-bot.slash('ping', {
-  description: 'Ping the bot with interactive buttons'
-}, async (ctx) => {
-  const embed = bot.createEmbed()
-    .setTitle('🏓 Pong!')
-    .setDescription('Bot is online and ready!')
-    .setColor(0x00ff00)
-    .addField('Response Time', '42ms', true)
-    .addField('Uptime', '5 days', true)
-    .setTimestamp();
-
-  const buttons = [
-    bot.createButton('Refresh', 'ping_refresh', ButtonStyle.Primary),
-    bot.createButton('Stats', 'ping_stats', ButtonStyle.Secondary),
-    bot.createLinkButton('Invite Bot', 'https://discord.com/oauth2/authorize?client_id=123')
-  ];
-
-  const actionRow = bot.createActionRow(...buttons);
-
-  await ctx.reply({
-    embeds: [embed.toJSON()],
-    components: [actionRow]
-  });
-});
-
-// Handle button interactions
-bot.button('ping_refresh', async (ctx) => {
-  await ctx.update({
-    content: '✅ Refreshed! Bot is still running perfectly.',
-    components: []
-  });
-});
-
-bot.button('ping_stats', async (ctx) => {
-  const embed = bot.createEmbed()
-    .setTitle('📊 Bot Statistics')
-    .addField('Servers', '150', true)
-    .addField('Users', '50,000', true)
-    .addField('Commands Run', '1,234,567', true)
-    .setColor(0x0099ff);
-
-  await ctx.update({
-    embeds: [embed.toJSON()],
-    components: []
-  });
-});
-
-// File upload command
-bot.command('upload', async (ctx) => {
-  if (ctx.message.attachments.length === 0) {
-    await ctx.reply('Please attach a file to upload!');
-    return;
-  }
-
-  const attachment = ctx.message.attachments[0];
+  const start = Date.now();
+  const content = 'content' in ctx ? ctx.content : 'interaction';
+  console.log(`[${new Date().toISOString()}] Command executed: ${content}`);
   
-  // Process and re-upload file
-  const processedFile = {
-    name: `processed_${attachment.filename}`,
-    data: Buffer.from('Processed file content'),
-    contentType: 'text/plain'
-  };
-
-  const embed = bot.createEmbed()
-    .setTitle('✅ File Processed')
-    .setDescription(`Your file "${attachment.filename}" has been processed!`)
-    .setColor(0x00ff00);
-
-  await bot.uploadFile(ctx.message.channel_id, processedFile);
-  await ctx.reply({ embeds: [embed.toJSON()] });
-});
-
-// Advanced form with select menus
-bot.slash('feedback', {
-  description: 'Submit feedback with interactive form'
-}, async (ctx) => {
-  const categorySelect = bot.createStringSelect('feedback_category', [
-    { label: '🐛 Bug Report', value: 'bug', description: 'Report a bug or issue' },
-    { label: '💡 Feature Request', value: 'feature', description: 'Request a new feature' },
-    { label: '❓ General Question', value: 'question', description: 'Ask a general question' },
-    { label: '👍 Compliment', value: 'compliment', description: 'Share positive feedback' }
-  ]);
-
-  const actionRow = bot.createActionRow(categorySelect);
-
-  await ctx.reply({
-    content: '📝 Please select a feedback category:',
-    components: [actionRow],
-    flags: 64 // Ephemeral
-  });
-});
-
-bot.selectMenu('feedback_category', async (ctx) => {
-  const category = ctx.values?.[0];
-  const categoryEmojis = {
-    bug: '🐛',
-    feature: '💡', 
-    question: '❓',
-    compliment: '👍'
-  };
-
-  await ctx.update({
-    content: `${categoryEmojis[category as keyof typeof categoryEmojis]} Thank you for selecting "${category}". Your feedback has been recorded!`,
-    components: []
-  });
-});
-
-// Auto-moderation with mention handling
-bot.onMessage(async (ctx) => {
-  // Auto-delete messages with prohibited content
-  if (ctx.content.toLowerCase().includes('spam')) {
-    await ctx.delete();
-    
-    const embed = bot.createEmbed()
-      .setTitle('⚠️ Message Removed')
-      .setDescription('Your message was removed for containing prohibited content.')
-      .setColor(0xff0000)
-      .addField('User', ctx.author.username, true)
-      .addField('Reason', 'Spam content detected', true)
-      .setTimestamp();
-
-    await ctx.send({ embeds: [embed.toJSON()] });
+  try {
+    await next();
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] Command error:`, error);
+    throw error;
+  } finally {
+    const end = Date.now();
+    console.log(`[${new Date().toISOString()}] Command completed in ${end - start}ms`);
   }
-});
-
-// Respond to mentions
-bot.onMention(async (ctx) => {
-  const responses = [
-    "👋 Hello! You mentioned me!",
-    "🤖 I'm here! How can I help?",
-    "✨ You called? I'm ready to assist!"
-  ];
-  
-  const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-  await ctx.reply(randomResponse);
-});
-
-// Advanced permission checking command
-bot.command('permissions', async (ctx) => {
-  if (!ctx.member) {
-    await ctx.reply('This command can only be used in servers!');
-    return;
-  }
-
-  // Simulate checking permissions (in real bot, you'd get this from Discord API)
-  const userPermissions = '8'; // Administrator for example
-  
-  const checks = [
-    { name: 'Administrator', permission: Permissions.ADMINISTRATOR },
-    { name: 'Manage Server', permission: Permissions.MANAGE_GUILD },
-    { name: 'Manage Messages', permission: Permissions.MANAGE_MESSAGES },
-    { name: 'Kick Members', permission: Permissions.KICK_MEMBERS }
-  ];
-
-  const embed = bot.createEmbed()
-    .setTitle(`🔐 Permissions for ${ctx.author.username}`)
-    .setColor(0x5865f2);
-
-  const mockGuild = { 
-    id: ctx.guild?.id || '123', 
-    name: 'Test Server',
-    permissions: userPermissions,
-    owner: false
-  };
-
-  checks.forEach(check => {
-    const hasPermission = hasPermission(mockGuild, check.permission);
-    embed.addField(
-      check.name, 
-      hasPermission ? '✅ Yes' : '❌ No', 
-      true
-    );
-  });
-
-  await ctx.reply({ embeds: [embed.toJSON()] });
 });
 
 // Start the bot
 bot.start().then(() => {
-  console.log('🚀 UniCord bot is online!');
+  console.log('🚀 Enhanced UniCord bot is running!');
+  console.log('📚 Use !help or /help for commands');
+  console.log('🎛️ Try the interactive menu with /menu');
 }).catch(console.error);
-
-// Enhanced OAuth2 Example for Web Integration
-const oauth = new OAuth2({
-  clientId: process.env.DISCORD_CLIENT_ID!,
-  redirectUri: 'http://localhost:3000/auth/callback',
-  backendTokenURL: '/api/auth/discord'
-});
-
-export { bot, oauth };

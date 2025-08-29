@@ -1,0 +1,28 @@
+{
+  "name": "unicord-enhanced-bot-example",
+  "version": "1.0.0",
+  "description": "Enhanced UniCord bot example showcasing all new features",
+  "main": "index.ts",
+  "scripts": {
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts",
+    "build": "tsc",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "unicord",
+    "typescript",
+    "example"
+  ],
+  "author": "Locon213",
+  "license": "MIT",
+  "dependencies": {
+    "@locon213/unicord": "^0.1.3"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.3"
+  }
+}
